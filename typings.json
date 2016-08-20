@@ -1,0 +1,11 @@
+{
+  "globalDependencies": {
+    "es6-shim": "registry:dt/es6-shim#0.31.2+20160602141504",
+    "graphql": "github:nitintutlani/typed-graphql",
+    "mocha": "registry:dt/mocha#2.2.5+20160720003353",
+    "node": "registry:dt/node#6.0.0+20160818175514"
+  },
+  "dependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160723033700"
+  }
+}
