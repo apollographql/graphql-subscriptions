@@ -10,7 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true,
-    "allowJs": true
+    "declaration": true
   },
   "exclude": [
     "node_modules",
