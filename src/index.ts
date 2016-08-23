@@ -1,1 +1,1 @@
-export { FilteredPubSub, SubscriptionManager } from './pubsub.ts';
+export { FilteredPubSub, SubscriptionManager } from './pubsub';
