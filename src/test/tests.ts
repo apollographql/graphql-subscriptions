@@ -9,6 +9,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 
 import {
@@ -70,12 +71,28 @@ const schema = new GraphQLSchema({
           return root;
         },
       },
+      testFilter: {
+        type: GraphQLString,
+        resolve: function (root, { filterBoolean }) {
+          return filterBoolean ? 'goodFilter' : 'badFilter';
+        },
+        args: {
+          filterBoolean: { type: GraphQLBoolean },
+        },
+      },
     },
   }),
 });
 
 describe('SubscriptionManager', function() {
-  const subManager = new SubscriptionManager({ schema });
+  const subManager = new SubscriptionManager({
+    schema,
+    filters: {
+      'Filter1': (options) => {
+        return (root) => root.filterBoolean === options.variables.filterBoolean;
+      },
+    },
+   });
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
@@ -121,6 +138,30 @@ describe('SubscriptionManager', function() {
     };
     const subId = subManager.subscribe({ query, operationName: 'X', callback });
     subManager.publish('X', 'good');
+    subManager.unsubscribe(subId);
+  });
+
+  it('can use filter functions properly', function(done) {
+    const query = `subscription Filter1($filterBoolean: Boolean){
+       testFilter(filterBoolean: $filterBoolean)
+      }`;
+    const callback = function(err, payload){
+      try {
+        expect(payload.data.testFilter).to.equals('goodFilter');
+      } catch (e) {
+        done(e);
+        return;
+      }
+      done();
+    };
+    const subId = subManager.subscribe({
+      query,
+      operationName: 'Filter1',
+      variables: { filterBoolean: true},
+      callback,
+    });
+    subManager.publish('Filter1', {filterBoolean: false });
+    subManager.publish('Filter1', {filterBoolean: true });
     subManager.unsubscribe(subId);
   });
 

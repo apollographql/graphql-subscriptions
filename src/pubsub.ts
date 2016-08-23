@@ -71,10 +71,12 @@ export interface SubscriptionOptions {
 export class SubscriptionManager {
     private pubsub;
     private schema;
+    private filters;
 
-    constructor(options: { schema: GraphQLSchema }){
+    constructor(options: { schema: GraphQLSchema, filters: {[triggerName: string]: Function} }){
         this.pubsub = new FilteredPubSub();
         this.schema = options.schema;
+        this.filters = options.filters;
     }
 
     public publish(triggerName: string, payload: any){
@@ -103,11 +105,14 @@ export class SubscriptionManager {
         // TODO: extract the arguments out of the query instead of just using the variables
         const args = options.variables;
 
-        // TODO: allow other ways of figuring out trigger name than operationName?
+        // TODO: allow other ways of figuring out trigger name than operationName
         const triggerName = options.operationName;
 
-        // TODO: make better filter functions!
-        const filterFunc = () => true;
+        // TODO: make better filter functions automatically. needs more thought.
+        let filterFunc = () => true;
+        if (this.filters[triggerName]){
+            filterFunc = this.filters[triggerName](options);
+        }
 
         // 2. generate the filter function and the handler function
         const onMessage = rootValue => {
@@ -126,6 +131,7 @@ export class SubscriptionManager {
             } catch (e) {
                 // this does not kill the subscription, it could be a temporary failure
                 // TODO: when could this happen?
+                // It's not a GraphQL error, so what do we do with it?
                 options.callback(e);
             }
         }
