@@ -4,15 +4,19 @@ import {
 } from 'chai';
 
 import {
-    FilteredPubSub,
-    SubscriptionManager,
-} from '../pubsub';
-
-import {
+  parse,
+  validate,
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
+
+import {
+    FilteredPubSub,
+    SubscriptionManager,
+} from '../pubsub';
+
+import { subscriptionHasSingleRootField } from '../validation';
 
 describe('FilteredPubSub', function() {
   it('can subscribe and is called when events happen', function(done) {
@@ -156,5 +160,92 @@ describe('SubscriptionManager', function() {
     const subId = subManager.subscribe({ query, operationName: 'X', callback });
     subManager.publish('X', 'good');
     subManager.unsubscribe(subId);
+  });
+});
+
+
+// ---------------------------------------------
+// validation tests ....
+
+// TODO: Gotta test it..
+
+const validationSchema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+      placeholder: { type: GraphQLString },
+    },
+  }),
+  subscription: new GraphQLObjectType({
+    name: 'Subscription',
+    fields: {
+      test1: { type: GraphQLString },
+      test2: { type: GraphQLString },
+    },
+  }),
+});
+
+describe('SubscriptionValidationRule', function() {
+  it('should allow a valid subscription', function() {
+    const sub = `subscription S1{
+      test1
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(0);
+  });
+
+  it('should allow another valid subscription', function() {
+    const sub = `
+    subscription S1{
+      test1
+    }
+    subscription S2{
+      test2
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(0);
+  });
+
+  it('should allow two valid subscription definitions', function() {
+    const sub = `subscription S2{
+      test2
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(0);
+  });
+
+
+  it('should not allow two fields in the subscription', function() {
+    const sub = `subscription S3{
+      test1
+      test2
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(1);
+    expect(errors[0].message).to.equals('Subscription "S3" must have only one field.');
+  });
+
+  it('should not allow inline fragments', function() {
+    const sub = `subscription S4{
+      ... on Subscription {
+        test1
+      }
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(1);
+    expect(errors[0].message).to.equals('Apollo subscriptions do not support fragments on the root field');
+  });
+
+  it('should not allow named fragments', function() {
+    const sub = `subscription S5{
+      ...testFragment
+    }
+
+    fragment testFragment on Subscription{
+      test2
+    }`;
+    const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
+    expect(errors.length).to.equals(1);
+    expect(errors[0].message).to.equals('Apollo subscriptions do not support fragments on the root field');
   });
 });
