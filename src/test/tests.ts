@@ -9,6 +9,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
 
@@ -80,6 +81,17 @@ const schema = new GraphQLSchema({
           filterBoolean: { type: GraphQLBoolean },
         },
       },
+      testFilterMulti: {
+        type: GraphQLString,
+        resolve: function (root, { filterBoolean }) {
+          return filterBoolean ? 'goodFilter' : 'badFilter';
+        },
+        args: {
+          filterBoolean: { type: GraphQLBoolean },
+          a: { type: GraphQLString },
+          b: { type: GraphQLInt },
+        },
+      },
     },
   }),
 });
@@ -87,9 +99,17 @@ const schema = new GraphQLSchema({
 describe('SubscriptionManager', function() {
   const subManager = new SubscriptionManager({
     schema,
-    filters: {
-      'Filter1': (options) => {
-        return (root) => root.filterBoolean === options.variables.filterBoolean;
+    setupFunctions: {
+      'testFilter': (options, { filterBoolean }) => {
+        return {
+          'Filter1': (root) => root.filterBoolean === filterBoolean,
+        };
+      },
+      'testFilterMulti': (options) => {
+        return {
+          'Trigger1': () => true,
+          'Trigger2': () => true,
+        };
       },
     },
    });
@@ -137,7 +157,7 @@ describe('SubscriptionManager', function() {
       done();
     };
     const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    subManager.publish('X', 'good');
+    subManager.publish('testSubscription', 'good');
     subManager.unsubscribe(subId);
   });
 
@@ -165,6 +185,38 @@ describe('SubscriptionManager', function() {
     subManager.unsubscribe(subId);
   });
 
+  it('can subscribe to more than one trigger', function(done) {
+    // I also used this for testing arg parsing (with console.log)
+    // args a and b can safely be removed.
+    // TODO: write real tests for argument parsing
+    let triggerCount = 0;
+    const query = `subscription multiTrigger($filterBoolean: Boolean, $uga: String){
+       testFilterMulti(filterBoolean: $filterBoolean, a: $uga, b: 66)
+      }`;
+    const callback = function(err, payload){
+      try {
+        expect(payload.data.testFilterMulti).to.equals('goodFilter');
+        triggerCount++;
+      } catch (e) {
+        done(e);
+        return;
+      }
+      if (triggerCount === 2) {
+        done();
+      }
+    };
+    const subId = subManager.subscribe({
+      query,
+      operationName: 'multiTrigger',
+      variables: { filterBoolean: true, uga: 'UGA'},
+      callback,
+    });
+    subManager.publish('NotATrigger', {filterBoolean: false});
+    subManager.publish('Trigger1', {filterBoolean: true });
+    subManager.publish('Trigger2', {filterBoolean: true });
+    subManager.unsubscribe(subId);
+  });
+
   it('can unsubscribe', function(done) {
     const query = 'subscription X{ testSubscription }';
     const callback = (err, payload) => {
@@ -178,8 +230,8 @@ describe('SubscriptionManager', function() {
     };
     const subId = subManager.subscribe({ query, operationName: 'X', callback });
     subManager.unsubscribe(subId);
-    subManager.publish('X', 'bad');
-    setTimeout(done, 5);
+    subManager.publish('testSubscription', 'bad');
+    setTimeout(done, 30);
   });
 
   it('calls the error callback if there is an execution error', function(done) {
@@ -199,7 +251,7 @@ describe('SubscriptionManager', function() {
       done();
     };
     const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    subManager.publish('X', 'good');
+    subManager.publish('testSubscription', 'good');
     subManager.unsubscribe(subId);
   });
 });

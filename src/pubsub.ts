@@ -2,14 +2,20 @@
 // This is basically just event emitters wrapped with a function that filters messages.
 //
 import { EventEmitter } from 'events';
-import { 
+import graphql, { 
     GraphQLSchema,
     GraphQLError,
     validate,
     execute,
     parse,
-    specifiedRules
+    specifiedRules,
+    OperationDefinition,
+    Field,
+    Variable,
+    IntValue,
 } from 'graphql';
+
+const valueFromAST = require('graphql').valueFromAST;
 
 import {
     subscriptionHasSingleRootField
@@ -69,14 +75,18 @@ export interface SubscriptionOptions {
 
 // This manages actual GraphQL subscriptions.
 export class SubscriptionManager {
-    private pubsub;
-    private schema;
-    private filters;
+    private pubsub: FilteredPubSub;
+    private schema: GraphQLSchema;
+    private setupFunctions: { [subscriptionName: string]: Function };
+    private subscriptions: { [externalId: number]: Array<number>};
+    private maxSubscriptionId: number;
 
-    constructor(options: { schema: GraphQLSchema, filters: {[triggerName: string]: Function} }){
+    constructor(options: { schema: GraphQLSchema, setupFunctions: {[subscriptionName: string]: Function} }){
         this.pubsub = new FilteredPubSub();
         this.schema = options.schema;
-        this.filters = options.filters;
+        this.setupFunctions = options.setupFunctions;
+        this.subscriptions = {};
+        this.maxSubscriptionId = 0;
     }
 
     public publish(triggerName: string, payload: any){
@@ -102,46 +112,72 @@ export class SubscriptionManager {
             // this error kills the subscription, so we throw it.
             throw new ValidationError(errors);
         }
-        // TODO: extract the arguments out of the query instead of just using the variables
-        const args = options.variables;
 
-        // TODO: allow other ways of figuring out trigger name than operationName
-        const triggerName = options.operationName;
+        const args = {};
 
-        // TODO: make better filter functions automatically. needs more thought.
-        let filterFunc = () => true;
-        if (this.filters[triggerName]){
-            filterFunc = this.filters[triggerName](options);
-        }
+        // operationName is the name of the only root field in the subscription document
+        let subscriptionName = '';
+        parsedQuery.definitions.forEach( definition => {
+            if (definition.kind === 'OperationDefinition'){
+                // only one root field is allowed on subscription. No fragments for now.
+                const rootField = (definition as OperationDefinition).selectionSet.selections[0] as Field;
+                subscriptionName = rootField.name.value;
 
-        // 2. generate the filter function and the handler function
-        const onMessage = rootValue => {
-            // rootValue is the payload sent by the event emitter / trigger 
-            // by convention this is the value returned from the mutation resolver
-
-            try {
-                execute(
-                    this.schema,
-                    parsedQuery,
-                    rootValue,
-                    context,
-                    options.variables,
-                    options.operationName
-                ).then( data => options.callback(null, data) )
-            } catch (e) {
-                // this does not kill the subscription, it could be a temporary failure
-                // TODO: when could this happen?
-                // It's not a GraphQL error, so what do we do with it?
-                options.callback(e);
+                const fields = this.schema.getSubscriptionType().getFields();
+                rootField.arguments.forEach( arg => {
+                    // we have to get the one arg's definition from the schema
+                    const argDefinition = fields[subscriptionName].args.filter( 
+                        argDef => argDef.name === arg.name.value
+                    )[0];
+                    args[argDefinition.name] = valueFromAST(arg.value, argDefinition.type, options.variables);
+                });
             }
+        });
+
+        // if not provided, the triggerName will be the subscriptionName, and
+        // the filter will always return true.
+        let triggerMap = {[subscriptionName]: () => true};
+        if (this.setupFunctions[subscriptionName]){
+            triggerMap = this.setupFunctions[subscriptionName](options, args, subscriptionName);
         }
 
-        // 3. subscribe and return the subscription id
-        return this.pubsub.subscribe(triggerName, filterFunc, onMessage);
+        const externalSubscriptionId = this.maxSubscriptionId++;
+        this.subscriptions[externalSubscriptionId] = [];
+        Object.keys(triggerMap).forEach( triggerName => {
+            // 2. generate the filter function and the handler function
+            const onMessage = rootValue => {
+                // rootValue is the payload sent by the event emitter / trigger 
+                // by convention this is the value returned from the mutation resolver
+
+                try {
+                    execute(
+                        this.schema,
+                        parsedQuery,
+                        rootValue,
+                        context,
+                        options.variables,
+                        options.operationName
+                    ).then( data => options.callback(null, data) )
+                } catch (e) {
+                    // this does not kill the subscription, it could be a temporary failure
+                    // TODO: when could this happen?
+                    // It's not a GraphQL error, so what do we do with it?
+                    options.callback(e);
+                }
+            }
+
+            // 3. subscribe and return the subscription id
+            this.subscriptions[externalSubscriptionId].push(
+                this.pubsub.subscribe(triggerName, triggerMap[triggerName], onMessage)
+            );
+        });
+        return externalSubscriptionId;
     }
 
     public unsubscribe(subId){
         // pass the subId right through to pubsub. Do nothing else.
-        this.pubsub.unsubscribe(subId);
+        this.subscriptions[subId].forEach( internalId => {
+            this.pubsub.unsubscribe(internalId);
+        });
     }
 }
