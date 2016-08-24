@@ -84,7 +84,7 @@ export class SubscriptionManager {
     constructor(options: { schema: GraphQLSchema, setupFunctions: {[subscriptionName: string]: Function} }){
         this.pubsub = new FilteredPubSub();
         this.schema = options.schema;
-        this.setupFunctions = options.setupFunctions;
+        this.setupFunctions = options.setupFunctions || {};
         this.subscriptions = {};
         this.maxSubscriptionId = 0;
     }
