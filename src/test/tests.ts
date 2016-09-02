@@ -14,39 +14,32 @@ import {
 } from 'graphql';
 
 import {
-    FilteredPubSub,
+    PubSub,
     SubscriptionManager,
 } from '../pubsub';
 
 import { subscriptionHasSingleRootField } from '../validation';
 
-describe('FilteredPubSub', function() {
+describe('PubSub', function() {
   it('can subscribe and is called when events happen', function(done) {
-    const ps = new FilteredPubSub();
-    ps.subscribe('a', () => true, payload => {
+    const ps = new PubSub();
+    ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
       done();
     });
-    ps.publish('a', 'test');
-  });
-
-  it('can filter events that get sent to subscribers', function(done) {
-    const ps = new FilteredPubSub();
-    ps.subscribe('a', payload => payload !== 'bad', payload => {
-      expect(payload).to.equals('good');
-      done();
-    });
-    ps.publish('a', 'bad');
-    ps.publish('a', 'good');
+    const succeed = ps.publish('a', 'test');
+    expect(succeed).to.be.true;
   });
 
   it('can unsubscribe', function(done) {
-    const ps = new FilteredPubSub();
-    const subId = ps.subscribe('a', () => true, payload => {
+    const ps = new PubSub();
+    const subId = ps.subscribe('a', payload => {
       assert(false);
     });
     ps.unsubscribe(subId);
-    ps.publish('a', 'test');
+    const succeed = ps.publish('a', 'test');
+    expect(succeed).to.be.true; // True because publish success is not
+                                // indicated by trigger having subscriptions
     done(); // works because pubsub is synchronous
   });
 });
@@ -112,6 +105,7 @@ describe('SubscriptionManager', function() {
         };
       },
     },
+    pubsub: new PubSub(),
    });
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';
@@ -232,6 +226,11 @@ describe('SubscriptionManager', function() {
     subManager.unsubscribe(subId);
     subManager.publish('testSubscription', 'bad');
     setTimeout(done, 30);
+  });
+
+  it('throws an error when trying to unsubscribe from unknown id', function () {
+    expect(() => subManager.unsubscribe(123))
+      .to.throw('undefined');
   });
 
   it('calls the error callback if there is an execution error', function(done) {
