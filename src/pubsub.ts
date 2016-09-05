@@ -23,7 +23,7 @@ import {
 
 export interface PubSubEngine {
   publish(triggerName: string, payload: any): boolean
-  subscribe(triggerName: string, onMessage: Function): number
+  subscribe(triggerName: string, onMessage: Function): Promise<number>
   unsubscribe(subId: number)
 }
 
@@ -45,11 +45,11 @@ export class PubSub implements PubSubEngine {
         return true;
     }
 
-    public subscribe(triggerName: string, onMessage: Function): number {
+    public subscribe(triggerName: string, onMessage: Function): Promise<number> {
         this.ee.addListener(triggerName, onMessage);
         this.subIdCounter = this.subIdCounter + 1;
         this.subscriptions[this.subIdCounter] = [triggerName, onMessage];
-        return this.subIdCounter;
+        return Promise.resolve(this.subIdCounter);
     }
 
     public unsubscribe(subId: number) {
@@ -102,10 +102,10 @@ export class SubscriptionManager {
         this.pubsub.publish(triggerName, payload);
     }
 
-    public subscribe(options: SubscriptionOptions): number {
+    public subscribe(options: SubscriptionOptions): Promise<number> {
 
         if (!options.operationName){
-            throw new Error('Must provide operationName');
+            return Promise.reject<number>(new Error('Must provide operationName'));
         }
 
         // 1. validate the query, operationName and variables
@@ -119,7 +119,7 @@ export class SubscriptionManager {
         // TODO: validate that all variables have been passed (and are of correct type)?
         if (errors.length){
             // this error kills the subscription, so we throw it.
-            throw new ValidationError(errors);
+            return Promise.reject<number>(new ValidationError(errors));
         }
 
         const args = {};
@@ -152,6 +152,7 @@ export class SubscriptionManager {
 
         const externalSubscriptionId = this.maxSubscriptionId++;
         this.subscriptions[externalSubscriptionId] = [];
+        const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
             // 2. generate the filter function and the handler function
             const onMessage = rootValue => {
@@ -175,15 +176,19 @@ export class SubscriptionManager {
                 }
             }
 
-            const isTriggering: Function = triggerMap[triggerName];
+            // Will run the onMessage function only if the message passes the filter function.
+          const shouldTrigger: Function = triggerMap[triggerName];
+          const handler = (data) => shouldTrigger(data) && onMessage(data);
 
-            // 3. subscribe and return the subscription id
-            this.subscriptions[externalSubscriptionId].push(
-                // Will run the onMessage function only if the message passes the filter function.
-                this.pubsub.subscribe(triggerName, (data) => isTriggering(data) && onMessage(data))
-            );
+            // 3. subscribe and keep the subscription id
+            const subsPromise = this.pubsub.subscribe(triggerName, handler);
+            subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
+
+            subscriptionPromises.push(subsPromise);
         });
-        return externalSubscriptionId;
+
+        // Resolve the promise with external sub id only after all subscriptions completed
+        return Promise.all(subscriptionPromises).then(() => externalSubscriptionId);
     }
 
     public unsubscribe(subId){
