@@ -1,1 +1,1 @@
-export { FilteredPubSub, SubscriptionManager } from './pubsub';
+export { PubSub, SubscriptionManager } from './pubsub';

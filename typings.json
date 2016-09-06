@@ -6,6 +6,7 @@
     "node": "registry:dt/node#6.0.0+20160818175514"
   },
   "dependencies": {
-    "chai": "registry:npm/chai#3.5.0+20160723033700"
+    "chai": "registry:npm/chai#3.5.0+20160723033700",
+    "chai-as-promised": "registry:npm/chai-as-promised#5.1.0+20160310030142"
   }
 }

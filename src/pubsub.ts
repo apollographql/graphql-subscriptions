@@ -2,7 +2,7 @@
 // This is basically just event emitters wrapped with a function that filters messages.
 //
 import { EventEmitter } from 'events';
-import graphql, { 
+import graphql, {
     GraphQLSchema,
     GraphQLError,
     validate,
@@ -21,7 +21,13 @@ import {
     subscriptionHasSingleRootField
 } from './validation';
 
-export class FilteredPubSub {
+export interface PubSubEngine {
+  publish(triggerName: string, payload: any): boolean
+  subscribe(triggerName: string, onMessage: Function): Promise<number>
+  unsubscribe(subId: number)
+}
+
+export class PubSub implements PubSubEngine {
     private ee: EventEmitter;
     private subscriptions: {[key: string]: [string, Function]};
     private subIdCounter: number;
@@ -32,27 +38,28 @@ export class FilteredPubSub {
         this.subIdCounter = 0;
     }
 
-    public publish(triggerName: string, payload: any){
+    public publish(triggerName: string, payload: any): boolean {
         this.ee.emit(triggerName, payload);
+        // Not using the value returned from emit method because it gives
+        // irrelevant false when there are no listeners.
+        return true;
     }
 
-    public subscribe(triggerName: string, filterFunc: Function, handler: Function): number{
-        // notify handler only if filterFunc returns true
-        const onMessage = (data) => filterFunc(data) ? handler(data) : null
+    public subscribe(triggerName: string, onMessage: Function): Promise<number> {
         this.ee.addListener(triggerName, onMessage);
         this.subIdCounter = this.subIdCounter + 1;
         this.subscriptions[this.subIdCounter] = [triggerName, onMessage];
-        return this.subIdCounter; 
+        return Promise.resolve(this.subIdCounter);
     }
 
-    public unsubscribe(subId: number): void {
+    public unsubscribe(subId: number) {
         const [triggerName, onMessage] = this.subscriptions[subId];
         delete this.subscriptions[subId];
         this.ee.removeListener(triggerName, onMessage);
     }
 }
 
-export class ValidationError extends Error{
+export class ValidationError extends Error {
     errors: Array<GraphQLError>;
     message: string;
 
@@ -75,28 +82,30 @@ export interface SubscriptionOptions {
 
 // This manages actual GraphQL subscriptions.
 export class SubscriptionManager {
-    private pubsub: FilteredPubSub;
+    private pubsub: PubSubEngine;
     private schema: GraphQLSchema;
     private setupFunctions: { [subscriptionName: string]: Function };
     private subscriptions: { [externalId: number]: Array<number>};
     private maxSubscriptionId: number;
 
-    constructor(options: { schema: GraphQLSchema, setupFunctions: {[subscriptionName: string]: Function} }){
-        this.pubsub = new FilteredPubSub();
+    constructor(options: {  schema: GraphQLSchema,
+                            setupFunctions: {[subscriptionName: string]: Function},
+                            pubsub: PubSubEngine }){
+        this.pubsub = options.pubsub;
         this.schema = options.schema;
         this.setupFunctions = options.setupFunctions || {};
         this.subscriptions = {};
         this.maxSubscriptionId = 0;
     }
 
-    public publish(triggerName: string, payload: any){
+    public publish(triggerName: string, payload: any) {
         this.pubsub.publish(triggerName, payload);
     }
 
-    public subscribe(options: SubscriptionOptions): number {
+    public subscribe(options: SubscriptionOptions): Promise<number> {
 
         if (!options.operationName){
-            throw new Error('Must provide operationName');
+            return Promise.reject<number>(new Error('Must provide operationName'));
         }
 
         // 1. validate the query, operationName and variables
@@ -110,7 +119,7 @@ export class SubscriptionManager {
         // TODO: validate that all variables have been passed (and are of correct type)?
         if (errors.length){
             // this error kills the subscription, so we throw it.
-            throw new ValidationError(errors);
+            return Promise.reject<number>(new ValidationError(errors));
         }
 
         const args = {};
@@ -126,7 +135,7 @@ export class SubscriptionManager {
                 const fields = this.schema.getSubscriptionType().getFields();
                 rootField.arguments.forEach( arg => {
                     // we have to get the one arg's definition from the schema
-                    const argDefinition = fields[subscriptionName].args.filter( 
+                    const argDefinition = fields[subscriptionName].args.filter(
                         argDef => argDef.name === arg.name.value
                     )[0];
                     args[argDefinition.name] = valueFromAST(arg.value, argDefinition.type, options.variables);
@@ -143,10 +152,11 @@ export class SubscriptionManager {
 
         const externalSubscriptionId = this.maxSubscriptionId++;
         this.subscriptions[externalSubscriptionId] = [];
+        const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
             // 2. generate the filter function and the handler function
             const onMessage = rootValue => {
-                // rootValue is the payload sent by the event emitter / trigger 
+                // rootValue is the payload sent by the event emitter / trigger
                 // by convention this is the value returned from the mutation resolver
 
                 try {
@@ -166,12 +176,19 @@ export class SubscriptionManager {
                 }
             }
 
-            // 3. subscribe and return the subscription id
-            this.subscriptions[externalSubscriptionId].push(
-                this.pubsub.subscribe(triggerName, triggerMap[triggerName], onMessage)
-            );
+            // Will run the onMessage function only if the message passes the filter function.
+          const shouldTrigger: Function = triggerMap[triggerName];
+          const handler = (data) => shouldTrigger(data) && onMessage(data);
+
+            // 3. subscribe and keep the subscription id
+            const subsPromise = this.pubsub.subscribe(triggerName, handler);
+            subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
+
+            subscriptionPromises.push(subsPromise);
         });
-        return externalSubscriptionId;
+
+        // Resolve the promise with external sub id only after all subscriptions completed
+        return Promise.all(subscriptionPromises).then(() => externalSubscriptionId);
     }
 
     public unsubscribe(subId){

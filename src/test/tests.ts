@@ -1,7 +1,5 @@
-import {
-  assert,
-  expect,
-} from 'chai';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   parse,
@@ -14,40 +12,39 @@ import {
 } from 'graphql';
 
 import {
-    FilteredPubSub,
+    PubSub,
     SubscriptionManager,
 } from '../pubsub';
 
 import { subscriptionHasSingleRootField } from '../validation';
 
-describe('FilteredPubSub', function() {
+chai.use(chaiAsPromised);
+const expect = chai.expect;
+const assert = chai.assert;
+
+describe('PubSub', function() {
   it('can subscribe and is called when events happen', function(done) {
-    const ps = new FilteredPubSub();
-    ps.subscribe('a', () => true, payload => {
+    const ps = new PubSub();
+    ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
       done();
+    }).then(() => {
+      const succeed = ps.publish('a', 'test');
+      expect(succeed).to.be.true;
     });
-    ps.publish('a', 'test');
-  });
-
-  it('can filter events that get sent to subscribers', function(done) {
-    const ps = new FilteredPubSub();
-    ps.subscribe('a', payload => payload !== 'bad', payload => {
-      expect(payload).to.equals('good');
-      done();
-    });
-    ps.publish('a', 'bad');
-    ps.publish('a', 'good');
   });
 
   it('can unsubscribe', function(done) {
-    const ps = new FilteredPubSub();
-    const subId = ps.subscribe('a', () => true, payload => {
+    const ps = new PubSub();
+    ps.subscribe('a', payload => {
       assert(false);
+    }).then((subId) => {
+      ps.unsubscribe(subId);
+      const succeed = ps.publish('a', 'test');
+      expect(succeed).to.be.true; // True because publish success is not
+                                  // indicated by trigger having subscriptions
+      done(); // works because pubsub is synchronous
     });
-    ps.unsubscribe(subId);
-    ps.publish('a', 'test');
-    done(); // works because pubsub is synchronous
   });
 });
 
@@ -112,37 +109,36 @@ describe('SubscriptionManager', function() {
         };
       },
     },
+    pubsub: new PubSub(),
    });
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
-    return expect(
-      () => subManager.subscribe({ query, operationName: 'a', callback })
-    ).to.throw('Error: Subscription query has validation errors');
+    return expect(subManager.subscribe({ query, operationName: 'a', callback }))
+        .to.eventually.be.rejectedWith('Subscription query has validation errors');
   });
 
   it('rejects subscriptions with more than one root field', function() {
     const query = 'subscription X{ a: testSubscription, b: testSubscription }';
     const callback = () => null;
-    return expect(
-      () => subManager.subscribe({ query, operationName: 'X', callback })
-    ).to.throw('Error: Subscription query has validation errors');
+    return expect(subManager.subscribe({ query, operationName: 'X', callback }))
+      .to.eventually.be.rejectedWith('Subscription query has validation errors');
   });
 
   it('requires operationName to be provided', function() {
     const query = 'subscription { testSubscription }';
     const callback = () => null;
-    return expect(
-      () => subManager.subscribe({ query, operationName: undefined as string, callback })
-    ).to.throw('Must provide operationName');
+    return expect(subManager.subscribe({ query, operationName: undefined as string, callback }))
+      .to.eventually.be.rejectedWith('Must provide operationName');
   });
 
   it('can subscribe with a valid query and gets a subId back', function() {
     const query = 'subscription X{ testSubscription }';
     const callback = () => null;
-    const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    expect(subId).to.be.a('number');
-    subManager.unsubscribe(subId);
+    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      expect(subId).to.be.a('number');
+      subManager.unsubscribe(subId);
+    });
   });
 
   it('can subscribe with a valid query and get the root value', function(done) {
@@ -156,9 +152,11 @@ describe('SubscriptionManager', function() {
       }
       done();
     };
-    const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    subManager.publish('testSubscription', 'good');
-    subManager.unsubscribe(subId);
+
+    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      subManager.publish('testSubscription', 'good');
+      subManager.unsubscribe(subId);
+    });
   });
 
   it('can use filter functions properly', function(done) {
@@ -174,15 +172,16 @@ describe('SubscriptionManager', function() {
       }
       done();
     };
-    const subId = subManager.subscribe({
+    subManager.subscribe({
       query,
       operationName: 'Filter1',
       variables: { filterBoolean: true},
       callback,
+    }).then(subId => {
+      subManager.publish('Filter1', {filterBoolean: false });
+      subManager.publish('Filter1', {filterBoolean: true });
+      subManager.unsubscribe(subId);
     });
-    subManager.publish('Filter1', {filterBoolean: false });
-    subManager.publish('Filter1', {filterBoolean: true });
-    subManager.unsubscribe(subId);
   });
 
   it('can subscribe to more than one trigger', function(done) {
@@ -205,16 +204,17 @@ describe('SubscriptionManager', function() {
         done();
       }
     };
-    const subId = subManager.subscribe({
+    subManager.subscribe({
       query,
       operationName: 'multiTrigger',
       variables: { filterBoolean: true, uga: 'UGA'},
       callback,
+    }).then(subId => {
+      subManager.publish('NotATrigger', {filterBoolean: false});
+      subManager.publish('Trigger1', {filterBoolean: true });
+      subManager.publish('Trigger2', {filterBoolean: true });
+      subManager.unsubscribe(subId);
     });
-    subManager.publish('NotATrigger', {filterBoolean: false});
-    subManager.publish('Trigger1', {filterBoolean: true });
-    subManager.publish('Trigger2', {filterBoolean: true });
-    subManager.unsubscribe(subId);
   });
 
   it('can unsubscribe', function(done) {
@@ -228,10 +228,16 @@ describe('SubscriptionManager', function() {
       }
       done();
     };
-    const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    subManager.unsubscribe(subId);
-    subManager.publish('testSubscription', 'bad');
-    setTimeout(done, 30);
+    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      subManager.unsubscribe(subId);
+      subManager.publish('testSubscription', 'bad');
+      setTimeout(done, 30);
+    });
+  });
+
+  it('throws an error when trying to unsubscribe from unknown id', function () {
+    expect(() => subManager.unsubscribe(123))
+      .to.throw('undefined');
   });
 
   it('calls the error callback if there is an execution error', function(done) {
@@ -250,9 +256,11 @@ describe('SubscriptionManager', function() {
       }
       done();
     };
-    const subId = subManager.subscribe({ query, operationName: 'X', callback });
-    subManager.publish('testSubscription', 'good');
-    subManager.unsubscribe(subId);
+
+    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      subManager.publish('testSubscription', 'good');
+      subManager.unsubscribe(subId);
+    });
   });
 });
 
