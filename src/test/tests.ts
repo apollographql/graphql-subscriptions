@@ -125,13 +125,6 @@ describe('SubscriptionManager', function() {
       .to.eventually.be.rejectedWith('Subscription query has validation errors');
   });
 
-  it('requires operationName to be provided', function() {
-    const query = 'subscription { testSubscription }';
-    const callback = () => null;
-    return expect(subManager.subscribe({ query, operationName: undefined as string, callback }))
-      .to.eventually.be.rejectedWith('Must provide operationName');
-  });
-
   it('can subscribe with a valid query and gets a subId back', function() {
     const query = 'subscription X{ testSubscription }';
     const callback = () => null;
