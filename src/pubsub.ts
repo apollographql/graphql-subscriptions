@@ -104,10 +104,6 @@ export class SubscriptionManager {
 
     public subscribe(options: SubscriptionOptions): Promise<number> {
 
-        if (!options.operationName){
-            return Promise.reject<number>(new Error('Must provide operationName'));
-        }
-
         // 1. validate the query, operationName and variables
         const parsedQuery = parse(options.query);
         const errors = validate(
