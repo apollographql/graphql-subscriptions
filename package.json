@@ -1,6 +1,6 @@
 {
   "name": "graphql-subscriptions",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
   "dependencies": {
