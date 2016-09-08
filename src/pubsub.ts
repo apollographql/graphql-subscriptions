@@ -160,7 +160,7 @@ export class SubscriptionManager {
                         this.schema,
                         parsedQuery,
                         rootValue,
-                        context,
+                        options.context,
                         options.variables,
                         options.operationName
                     ).then( data => options.callback(null, data) )
