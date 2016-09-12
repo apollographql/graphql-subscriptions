@@ -26,11 +26,11 @@ export function subscriptionHasSingleRootField(context: ValidationContext): any 
           numFields++;
         } else {
           // why the heck use a fragment on the Subscription type? Just ... don't
-          context.reportError(new GraphQLError('Apollo subscriptions do not support fragments on the root field', node));
+          context.reportError(new GraphQLError('Apollo subscriptions do not support fragments on the root field', [node]));
         }
       });
       if (numFields > 1) {
-        context.reportError(new GraphQLError(tooManySubscriptionFieldsError(operationName), node));
+        context.reportError(new GraphQLError(tooManySubscriptionFieldsError(operationName), [node]));
       }
       return false;
     },

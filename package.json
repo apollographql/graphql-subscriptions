@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "dependencies": {
     "es6-promise": "^3.2.1",
-    "graphql": "^0.6.2"
+    "graphql": "^0.7.0"
   },
   "scripts": {
     "compile": "tsc",
