@@ -25,7 +25,7 @@ const subscriptionManager = new SubscriptionManager({
   // every time a new comment is posted whose repository name matches args.repoFullName.
   setupFunctions: {
     commentAdded: (options, args) => ({
-      newCommentsChannel: comment => comment.repository_name === args.repoFullName,
+      newCommentsChannel: comment => comment.repoFullName === args.repoName,
     }),
   },
 });
