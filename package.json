@@ -3,6 +3,10 @@
   "version": "0.1.5",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/apollostack/graphql-subscriptions.git"
+  },
   "dependencies": {
     "es6-promise": "^3.2.1",
     "graphql": "^0.7.0"
