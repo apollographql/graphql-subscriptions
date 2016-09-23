@@ -21,9 +21,19 @@ import {
     subscriptionHasSingleRootField
 } from './validation';
 
+export interface SubscriptionOptions {
+    query: string;
+    operationName: string;
+    callback: Function;
+    variables?: { [key: string]: any };
+    context?: any;
+    formatError?: Function;
+    formatResponse?: Function;
+};
+
 export interface PubSubEngine {
   publish(triggerName: string, payload: any): boolean
-  subscribe(triggerName: string, onMessage: Function): Promise<number>
+  subscribe(triggerName: string, onMessage: Function, options: SubscriptionOptions): Promise<number>
   unsubscribe(subId: number)
 }
 
@@ -69,16 +79,6 @@ export class ValidationError extends Error {
         this.message = 'Subscription query has validation errors';
     }
 }
-
-export interface SubscriptionOptions {
-    query: string;
-    operationName: string;
-    callback: Function;
-    variables?: { [key: string]: any };
-    context?: any;
-    formatError?: Function;
-    formatResponse?: Function;
-};
 
 // This manages actual GraphQL subscriptions.
 export class SubscriptionManager {
@@ -177,7 +177,7 @@ export class SubscriptionManager {
           const handler = (data) => shouldTrigger(data) && onMessage(data);
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, handler);
+            const subsPromise = this.pubsub.subscribe(triggerName, handler, options);
             subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
 
             subscriptionPromises.push(subsPromise);
