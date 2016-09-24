@@ -170,11 +170,11 @@ export class SubscriptionManager {
                     // It's not a GraphQL error, so what do we do with it?
                     options.callback(e);
                 }
-            }
+            };
 
             // Will run the onMessage function only if the message passes the filter function.
-          const shouldTrigger: Function = triggerMap[triggerName];
-          const handler = (data) => shouldTrigger(data) && onMessage(data);
+            const shouldTrigger: Function = triggerMap[triggerName];
+            const handler = (data) => shouldTrigger(data) && onMessage(data);
 
             // 3. subscribe and keep the subscription id
             const subsPromise = this.pubsub.subscribe(triggerName, handler);
