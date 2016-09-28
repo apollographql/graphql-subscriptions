@@ -97,7 +97,7 @@ const schema = new GraphQLSchema({
         resolve: function (root) {
           return root;
         },
-      }
+      },
     },
   }),
 });
@@ -118,10 +118,10 @@ describe('SubscriptionManager', function() {
       'testFilterMulti': (options) => {
         return {
           'Trigger1': {
-            filter: () => true
+            filter: () => true,
           },
           'Trigger2': {
-            filter: () => true
+            filter: () => true,
           },
         };
       },
