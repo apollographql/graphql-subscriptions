@@ -99,13 +99,19 @@ describe('SubscriptionManager', function() {
     setupFunctions: {
       'testFilter': (options, { filterBoolean }) => {
         return {
-          'Filter1': (root) => root.filterBoolean === filterBoolean,
+          'Filter1': {
+            filter: (root) => root.filterBoolean === filterBoolean,
+          },
         };
       },
       'testFilterMulti': (options) => {
         return {
-          'Trigger1': () => true,
-          'Trigger2': () => true,
+          'Trigger1': {
+            filter: () => true
+          },
+          'Trigger2': {
+            filter: () => true
+          },
         };
       },
     },

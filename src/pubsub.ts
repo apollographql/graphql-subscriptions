@@ -139,18 +139,31 @@ export class SubscriptionManager {
             }
         });
 
-        // if not provided, the triggerName will be the subscriptionName, and
-        // the filter will always return true.
-        let triggerMap = {[subscriptionName]: () => true};
-        if (this.setupFunctions[subscriptionName]){
+        let triggerMap;
+
+        if (this.setupFunctions[subscriptionName]) {
             triggerMap = this.setupFunctions[subscriptionName](options, args, subscriptionName);
+        } else {
+            // if not provided, the triggerName will be the subscriptionName, The trigger will not have any
+            // options and rely on defaults that are set later.
+            triggerMap = {[subscriptionName]: {}};
         }
 
         const externalSubscriptionId = this.maxSubscriptionId++;
         this.subscriptions[externalSubscriptionId] = [];
         const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
-            // 2. generate the filter function and the handler function
+            const trigger = triggerMap[triggerName];
+
+            // Deconstruct the trigger options and set any defaults
+            let {filter} = trigger;
+
+            if (typeof filter !== 'function') {
+                // Let all messages through by default.
+                filter = () => true;
+            }
+
+            // 2. generate the handler function
             const onMessage = rootValue => {
                 // rootValue is the payload sent by the event emitter / trigger
                 // by convention this is the value returned from the mutation resolver
@@ -172,9 +185,7 @@ export class SubscriptionManager {
                 }
             };
 
-            // Will run the onMessage function only if the message passes the filter function.
-            const shouldTrigger: Function = triggerMap[triggerName];
-            const handler = (data) => shouldTrigger(data) && onMessage(data);
+            const handler = (data) => filter(data) && onMessage(data);
 
             // 3. subscribe and keep the subscription id
             const subsPromise = this.pubsub.subscribe(triggerName, handler);
