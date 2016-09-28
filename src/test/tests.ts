@@ -1,5 +1,7 @@
+import * as sinon from 'sinon';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as sinonChai from 'sinon-chai';
 
 import {
   parse,
@@ -19,6 +21,7 @@ import {
 import { subscriptionHasSingleRootField } from '../validation';
 
 chai.use(chaiAsPromised);
+chai.use(sinonChai);
 const expect = chai.expect;
 const assert = chai.assert;
 
@@ -89,11 +92,19 @@ const schema = new GraphQLSchema({
           b: { type: GraphQLInt },
         },
       },
+      testChannelOptions: {
+        type: GraphQLString,
+        resolve: function (root) {
+          return root;
+        },
+      }
     },
   }),
 });
 
 describe('SubscriptionManager', function() {
+  const pubsub = new PubSub();
+
   const subManager = new SubscriptionManager({
     schema,
     setupFunctions: {
@@ -114,9 +125,27 @@ describe('SubscriptionManager', function() {
           },
         };
       },
+      'testChannelOptions': () => {
+        return {
+          'Trigger1': {
+            channelOptions: {
+              foo: 'bar',
+            },
+          },
+        };
+      },
     },
-    pubsub: new PubSub(),
+    pubsub,
    });
+
+  beforeEach(() => {
+    sinon.spy(pubsub, 'subscribe');
+  });
+
+  afterEach(() => {
+    sinon.restore(pubsub.subscribe);
+  });
+
   it('throws an error if query is not valid', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
@@ -213,6 +242,31 @@ describe('SubscriptionManager', function() {
       subManager.publish('Trigger1', {filterBoolean: true });
       subManager.publish('Trigger2', {filterBoolean: true });
       subManager.unsubscribe(subId);
+    });
+  });
+
+  it('can subscribe to a trigger and pass options to PubSub using "channelOptions"', function(done) {
+    const query = 'subscription X{ testChannelOptions }';
+
+    subManager.subscribe({
+      query,
+      operationName: 'X',
+      callback: () => null,
+    }).then(() => {
+      expect(pubsub.subscribe).to.have.been.calledOnce;
+
+      const expectedChannelOptions = {
+        foo: 'bar',
+      };
+      expect(pubsub.subscribe).to.have.been.calledWith(
+          sinon.match.string,
+          sinon.match.func,
+          expectedChannelOptions
+      );
+
+      done();
+    }).catch(err => {
+      done(err);
     });
   });
 

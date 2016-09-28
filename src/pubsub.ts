@@ -23,7 +23,7 @@ import {
 
 export interface PubSubEngine {
   publish(triggerName: string, payload: any): boolean
-  subscribe(triggerName: string, onMessage: Function): Promise<number>
+  subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>
   unsubscribe(subId: number)
 }
 
@@ -156,7 +156,11 @@ export class SubscriptionManager {
             const trigger = triggerMap[triggerName];
 
             // Deconstruct the trigger options and set any defaults
-            let {filter} = trigger;
+            let {channelOptions, filter} = trigger;
+
+            if (!channelOptions) {
+                channelOptions = {};
+            }
 
             if (typeof filter !== 'function') {
                 // Let all messages through by default.
@@ -188,7 +192,7 @@ export class SubscriptionManager {
             const handler = (data) => filter(data) && onMessage(data);
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, handler);
+            const subsPromise = this.pubsub.subscribe(triggerName, handler, channelOptions);
             subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
 
             subscriptionPromises.push(subsPromise);
