@@ -80,16 +80,33 @@ export interface SubscriptionOptions {
     formatResponse?: Function;
 };
 
+export interface TriggerConfig {
+    channelOptions?: Object;
+    filter?: Function;
+}
+
+export interface TriggerMap {
+    [triggerName: string]: TriggerConfig;
+}
+
+export interface SetupFunction {
+    (options: SubscriptionOptions, args: {[key: string]: any}, subscriptionName: string): TriggerMap;
+}
+
+export interface SetupFunctions {
+    [subscriptionName: string]: SetupFunction;
+}
+
 // This manages actual GraphQL subscriptions.
 export class SubscriptionManager {
     private pubsub: PubSubEngine;
     private schema: GraphQLSchema;
-    private setupFunctions: { [subscriptionName: string]: Function };
+    private setupFunctions: SetupFunctions;
     private subscriptions: { [externalId: number]: Array<number>};
     private maxSubscriptionId: number;
 
     constructor(options: {  schema: GraphQLSchema,
-                            setupFunctions: {[subscriptionName: string]: Function},
+                            setupFunctions: SetupFunctions,
                             pubsub: PubSubEngine }){
         this.pubsub = options.pubsub;
         this.schema = options.schema;
@@ -139,7 +156,7 @@ export class SubscriptionManager {
             }
         });
 
-        let triggerMap;
+        let triggerMap: TriggerMap;
 
         if (this.setupFunctions[subscriptionName]) {
             triggerMap = this.setupFunctions[subscriptionName](options, args, subscriptionName);
