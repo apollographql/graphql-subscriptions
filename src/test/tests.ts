@@ -72,6 +72,12 @@ const schema = new GraphQLSchema({
           return root;
         },
       },
+      testContext: {
+        type: GraphQLString,
+        resolve(rootValue, args, context) {
+          return context;
+        },
+      },
       testFilter: {
         type: GraphQLString,
         resolve: function (root, { filterBoolean }) {
@@ -131,6 +137,13 @@ describe('SubscriptionManager', function() {
             channelOptions: {
               foo: 'bar',
             },
+          },
+        };
+      },
+      testContext(options) {
+        return {
+          contextTrigger(rootValue, context) {
+            return context === 'trigger';
           },
         };
       },
@@ -312,6 +325,30 @@ describe('SubscriptionManager', function() {
 
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subManager.publish('testSubscription', 'good');
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('calls createContext if provided', function(done) {
+    const query = `subscription TestContext { testContext }`;
+    const callback = function(error, payload) {
+      expect(error).to.be.null;
+      expect(payload.data.testContext).to.eq('trigger');
+      done();
+    };
+    const createContext = function(rootValue, options) {
+      expect(options.context).to.be.eq('original');
+      return 'trigger';
+    };
+    subManager.subscribe({
+      query,
+      context: 'original',
+      operationName: 'TestContext',
+      variables: {},
+      callback,
+      createContext,
+    }).then(subId => {
+      subManager.publish('contextTrigger', 'ignored');
       subManager.unsubscribe(subId);
     });
   });

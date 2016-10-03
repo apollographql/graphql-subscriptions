@@ -76,6 +76,7 @@ export interface SubscriptionOptions {
     callback: Function;
     variables?: { [key: string]: any };
     context?: any;
+    createContext?: Function;
     formatError?: Function;
     formatResponse?: Function;
 };
@@ -177,28 +178,35 @@ export class SubscriptionManager {
             } = triggerMap[triggerName];
 
             // 2. generate the handler function
-            const onMessage = rootValue => {
+            const onMessage = (rootValue, messageContext) => {
                 // rootValue is the payload sent by the event emitter / trigger
                 // by convention this is the value returned from the mutation resolver
+                execute(
+                    this.schema,
+                    parsedQuery,
+                    rootValue,
+                    messageContext,
+                    options.variables,
+                    options.operationName
+                ).then( data => options.callback(null, data) )
+            }
 
-                try {
-                    execute(
-                        this.schema,
-                        parsedQuery,
-                        rootValue,
-                        options.context,
-                        options.variables,
-                        options.operationName
-                    ).then( data => options.callback(null, data) )
-                } catch (e) {
-                    // this does not kill the subscription, it could be a temporary failure
-                    // TODO: when could this happen?
-                    // It's not a GraphQL error, so what do we do with it?
-                    options.callback(e);
+            // Will run the onMessage function only if the message passes the filter function.
+            const handler = (rootValue) => {
+                let promisedContext;
+                if (options.createContext) {
+                    promisedContext = Promise.resolve(options.createContext(rootValue, options));
+                } else {
+                    promisedContext = Promise.resolve(options.context);
                 }
-            };
-
-            const handler = (data) => filter(data) && onMessage(data);
+                promisedContext.then((messageContext) => {
+                    if (filter(rootValue, messageContext)) {
+                        onMessage(rootValue, messageContext);
+                    }
+                }).catch((error) => {
+                    options.callback(error);
+                });
+            }
 
             // 3. subscribe and keep the subscription id
             const subsPromise = this.pubsub.subscribe(triggerName, handler, channelOptions);
