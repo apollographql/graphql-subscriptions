@@ -171,16 +171,10 @@ export class SubscriptionManager {
         const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
             // Deconstruct the trigger options and set any defaults
-            let {channelOptions, filter} = triggerMap[triggerName];
-
-            if (!channelOptions) {
-                channelOptions = {};
-            }
-
-            if (typeof filter !== 'function') {
-                // Let all messages through by default.
-                filter = () => true;
-            }
+            const {
+                channelOptions = {},
+                filter = () => true, // Let all messages through by default.
+            } = triggerMap[triggerName];
 
             // 2. generate the handler function
             const onMessage = rootValue => {
