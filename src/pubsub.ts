@@ -23,7 +23,7 @@ import {
 
 export interface PubSubEngine {
   publish(triggerName: string, payload: any): boolean
-  subscribe(triggerName: string, onMessage: Function): Promise<number>
+  subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>
   unsubscribe(subId: number)
 }
 
@@ -80,16 +80,33 @@ export interface SubscriptionOptions {
     formatResponse?: Function;
 };
 
+export interface TriggerConfig {
+    channelOptions?: Object;
+    filter?: Function;
+}
+
+export interface TriggerMap {
+    [triggerName: string]: TriggerConfig;
+}
+
+export interface SetupFunction {
+    (options: SubscriptionOptions, args: {[key: string]: any}, subscriptionName: string): TriggerMap;
+}
+
+export interface SetupFunctions {
+    [subscriptionName: string]: SetupFunction;
+}
+
 // This manages actual GraphQL subscriptions.
 export class SubscriptionManager {
     private pubsub: PubSubEngine;
     private schema: GraphQLSchema;
-    private setupFunctions: { [subscriptionName: string]: Function };
+    private setupFunctions: SetupFunctions;
     private subscriptions: { [externalId: number]: Array<number>};
     private maxSubscriptionId: number;
 
     constructor(options: {  schema: GraphQLSchema,
-                            setupFunctions: {[subscriptionName: string]: Function},
+                            setupFunctions: SetupFunctions,
                             pubsub: PubSubEngine }){
         this.pubsub = options.pubsub;
         this.schema = options.schema;
@@ -139,18 +156,27 @@ export class SubscriptionManager {
             }
         });
 
-        // if not provided, the triggerName will be the subscriptionName, and
-        // the filter will always return true.
-        let triggerMap = {[subscriptionName]: () => true};
-        if (this.setupFunctions[subscriptionName]){
+        let triggerMap: TriggerMap;
+
+        if (this.setupFunctions[subscriptionName]) {
             triggerMap = this.setupFunctions[subscriptionName](options, args, subscriptionName);
+        } else {
+            // if not provided, the triggerName will be the subscriptionName, The trigger will not have any
+            // options and rely on defaults that are set later.
+            triggerMap = {[subscriptionName]: {}};
         }
 
         const externalSubscriptionId = this.maxSubscriptionId++;
         this.subscriptions[externalSubscriptionId] = [];
         const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
-            // 2. generate the filter function and the handler function
+            // Deconstruct the trigger options and set any defaults
+            const {
+                channelOptions = {},
+                filter = () => true, // Let all messages through by default.
+            } = triggerMap[triggerName];
+
+            // 2. generate the handler function
             const onMessage = rootValue => {
                 // rootValue is the payload sent by the event emitter / trigger
                 // by convention this is the value returned from the mutation resolver
@@ -170,14 +196,12 @@ export class SubscriptionManager {
                     // It's not a GraphQL error, so what do we do with it?
                     options.callback(e);
                 }
-            }
+            };
 
-            // Will run the onMessage function only if the message passes the filter function.
-          const shouldTrigger: Function = triggerMap[triggerName];
-          const handler = (data) => shouldTrigger(data) && onMessage(data);
+            const handler = (data) => filter(data) && onMessage(data);
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, handler);
+            const subsPromise = this.pubsub.subscribe(triggerName, handler, channelOptions);
             subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
 
             subscriptionPromises.push(subsPromise);

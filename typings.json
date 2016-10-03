@@ -7,6 +7,8 @@
   },
   "dependencies": {
     "chai": "registry:npm/chai#3.5.0+20160723033700",
-    "chai-as-promised": "registry:npm/chai-as-promised#5.1.0+20160310030142"
+    "chai-as-promised": "registry:npm/chai-as-promised#5.1.0+20160310030142",
+    "sinon": "registry:npm/sinon#1.16.0+20160723033700",
+    "sinon-chai": "registry:npm/sinon-chai#2.8.0+20160310030142"
   }
 }
