@@ -153,10 +153,8 @@ export class SubscriptionManager {
         this.subscriptions[externalSubscriptionId] = [];
         const subscriptionPromises = [];
         Object.keys(triggerMap).forEach( triggerName => {
-            const trigger = triggerMap[triggerName];
-
             // Deconstruct the trigger options and set any defaults
-            let {channelOptions, filter} = trigger;
+            let {channelOptions, filter} = triggerMap[triggerName];
 
             if (!channelOptions) {
                 channelOptions = {};
