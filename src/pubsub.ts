@@ -177,31 +177,38 @@ export class SubscriptionManager {
             } = triggerMap[triggerName];
 
             // 2. generate the handler function
-            const onMessage = rootValue => {
-                // rootValue is the payload sent by the event emitter / trigger
-                // by convention this is the value returned from the mutation resolver
-
-                try {
+            //
+            // rootValue is the payload sent by the event emitter / trigger by
+            // convention this is the value returned from the mutation
+            // resolver
+            const onMessage = (rootValue) => {
+                let contextPromise;
+                if (typeof options.context === 'function') {
+                    contextPromise = new Promise((resolve) => {
+                        resolve(options.context());
+                    });
+                } else {
+                    contextPromise = Promise.resolve(options.context);
+                }
+                contextPromise.then((context) => {
+                    if (!filter(rootValue, context)) {
+                        return;
+                    }
                     execute(
                         this.schema,
                         parsedQuery,
                         rootValue,
-                        options.context,
+                        context,
                         options.variables,
                         options.operationName
                     ).then( data => options.callback(null, data) )
-                } catch (e) {
-                    // this does not kill the subscription, it could be a temporary failure
-                    // TODO: when could this happen?
-                    // It's not a GraphQL error, so what do we do with it?
-                    options.callback(e);
-                }
-            };
-
-            const handler = (data) => filter(data) && onMessage(data);
+                }).catch((error) => {
+                    options.callback(error);
+                });
+            }
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, handler, channelOptions);
+            const subsPromise = this.pubsub.subscribe(triggerName, onMessage, channelOptions);
             subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
 
             subscriptionPromises.push(subsPromise);
