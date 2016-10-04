@@ -329,24 +329,22 @@ describe('SubscriptionManager', function() {
     });
   });
 
-  it('calls createContext if provided', function(done) {
+  it('calls context if it is a function', function(done) {
     const query = `subscription TestContext { testContext }`;
     const callback = function(error, payload) {
       expect(error).to.be.null;
       expect(payload.data.testContext).to.eq('trigger');
       done();
     };
-    const createContext = function(rootValue, options) {
-      expect(options.context).to.be.eq('original');
+    const context = function() {
       return 'trigger';
     };
     subManager.subscribe({
       query,
-      context: 'original',
+      context,
       operationName: 'TestContext',
       variables: {},
       callback,
-      createContext,
     }).then(subId => {
       subManager.publish('contextTrigger', 'ignored');
       subManager.unsubscribe(subId);
