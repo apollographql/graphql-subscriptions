@@ -1,10 +1,10 @@
 # graphql-subscriptions
 
-GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. 
+GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
 
 ### Installation
 
-`npm install graphql-subscriptions` 
+`npm install graphql-subscriptions`
 
 
 ### Example usage
@@ -19,13 +19,15 @@ const pubsub = new PubSub();
 const subscriptionManager = new SubscriptionManager({
   schema,
   pubsub,
-  
+
   // setupFunctions maps from subscription name to a map of channel names and their filter functions
   // in this case it will subscribe to the commentAddedChannel and re-run the subscription query
   // every time a new comment is posted whose repository name matches args.repoFullName.
   setupFunctions: {
     commentAdded: (options, args) => ({
-      newCommentsChannel: comment => comment.repository_name === args.repoFullName,
+      newCommentsChannel: {
+        filter: comment => comment.repository_name === args.repoFullName,
+      },
     }),
   },
 });
