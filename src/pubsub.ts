@@ -132,7 +132,7 @@ export class SubscriptionManager {
         // TODO: validate that all variables have been passed (and are of correct type)?
         if (errors.length){
             // this error kills the subscription, so we throw it.
-            return Promise.reject<number>(new ValidationError(errors));
+            return Promise.reject(new ValidationError(errors));
         }
 
         const args = {};
