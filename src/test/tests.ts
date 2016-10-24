@@ -306,6 +306,15 @@ describe('SubscriptionManager', function() {
       .to.throw('undefined');
   });
 
+  it('throws an error when trying to unsubscribe a second time', function () {
+    const query = 'subscription X{ testSubscription }';
+    return subManager.subscribe({ query, operationName: 'X', callback() { /* no publish */ } }).then(subId => {
+      subManager.unsubscribe(subId);
+      expect(() => subManager.unsubscribe(subId))
+        .to.throw('undefined');
+      });
+  });
+
   it('calls the error callback if there is an execution error', function(done) {
     const query = `subscription X($uga: Boolean!){
       testSubscription  @skip(if: $uga)
