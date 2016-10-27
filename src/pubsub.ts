@@ -223,5 +223,6 @@ export class SubscriptionManager {
         this.subscriptions[subId].forEach( internalId => {
             this.pubsub.unsubscribe(internalId);
         });
+        delete this.subscriptions[subId]
     }
 }
