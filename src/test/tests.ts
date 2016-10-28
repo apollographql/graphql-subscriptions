@@ -182,6 +182,15 @@ describe('SubscriptionManager', function() {
     });
   });
 
+  it('can subscribe with a nameless query and gets a subId back', function() {
+    const query = 'subscription { testSubscription }';
+    const callback = () => null;
+    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+      expect(subId).to.be.a('number');
+      subManager.unsubscribe(subId);
+    });
+  });
+
   it('can subscribe with a valid query and get the root value', function(done) {
     const query = 'subscription X{ testSubscription }';
     const callback = function(err, payload){

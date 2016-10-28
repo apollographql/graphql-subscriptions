@@ -19,7 +19,7 @@ export function subscriptionHasSingleRootField(context: ValidationContext): any 
   schema.getSubscriptionType();
   return {
     OperationDefinition(node) {
-      const operationName = node.name.value;
+      const operationName = node.name ? node.name.value : '';
       let numFields = 0;
       node.selectionSet.selections.forEach( (selection: Selection) => {
         if (selection.kind === FIELD) {
