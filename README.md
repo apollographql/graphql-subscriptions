@@ -35,7 +35,7 @@ const subscriptionManager = new SubscriptionManager({
 });
 
 // start a subscription
-subscriptionManger.subscribe({
+subscriptionManager.subscribe({
   query: `
     subscription newComments($repoName: String!){
       commentAdded(repoName: $repoName) { # <-- this is the subscription name
