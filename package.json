@@ -8,8 +8,7 @@
     "url": "https://github.com/apollostack/graphql-subscriptions.git"
   },
   "dependencies": {
-    "es6-promise": "^3.2.1",
-    "graphql": "^0.7.0"
+    "es6-promise": "^3.2.1"
   },
   "scripts": {
     "compile": "tsc",
@@ -24,6 +23,7 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "devDependencies": {
+    "graphql": "^0.7.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "istanbul": "^1.0.0-alpha.2",
