@@ -2,14 +2,19 @@
 
 When client side creates the WebSocket instance and connects to the subscriptions server, it must provide the authorization token, but there are some issues with that:
 
-1. It’s not possible to provide custom headers when creating WebSocket connection in browser.
+1. It’s not possible to provide custom headers when creating WebSocket connection in browser. 
+
+> related to https://github.com/apollostack/subscriptions-transport-ws/issues/50 ,
+https://github.com/apollostack/subscriptions-transport-ws/pull/45
  
 A possible workaround is to send the auth token in the url as query parameter and parse in on sever side while doing the connection handshake 
 
 > (Note: graphql-subscription does not expose onConnection callback, only onSubscribe, which occur after the connection) 
 
 2. You have to create the actual connection and then reject it in the server side if there is an error with the user’s authorization token.
-At the moment, graphql-subscription does not expose `unsubscribe` or `disconnect` feature for a connection (should be part of `onConnection`)
+At the moment, graphql-subscription does not expose `unsubscribe` or `disconnect` feature for a connection (should be part of `onConnection`) 
+
+> related to https://github.com/apollostack/subscriptions-transport-ws/issues/51 , https://github.com/apollostack/subscriptions-transport-ws/pull/17
 
 3. At the moment, the client side can provide the “context” object for the subscription (and not for the connection), which can contain his auth token.
 
