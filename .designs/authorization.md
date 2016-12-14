@@ -53,6 +53,12 @@ It’s not an option to validate the auth token on the server before each public
 * https://auth0.com/blog/auth-with-socket-io/ 
 * https://auth0.com/blog/auth-with-socket-io/ 
     * Suggests using authorization on connection using url parameter with the auth token.
+* Meteor/DDP
+    * The DDP protocol itself has no concept of authentication. Authentication is done via normal method calls.
+    * The Meteor DDP server implementation allows method calls to store state on the connection object representing the current user ID, which is accessible from other methods and publications. If the user ID ever changes, all publications are basically re-evaluated from scratch (inside the server). Nothing special is done on the server side to allow methods to notice if the user ID changes while they are running; however, methods run in series unless they explicitly ask to unblock the connection (and the client tries to not send login methods in parallel with other methods).
+    * The Meteor Accounts package tracks DDP connections associated with resume tokens and disconnects them if the resume token associated with that connection is deleted from the database.
+    * Personal opinion from @glasser: having auth just be "another method" wasn't the best idea. It works better if it's an established-at-beginning-of-connection, disconnect-to-change thing. However, the general idea of having a way for changes to authn/authz to "rerun publishers" or "disconnect connections" is nice.
+  
 
 
 ## Implementation possibility:
