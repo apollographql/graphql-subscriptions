@@ -208,10 +208,10 @@ export class SubscriptionManager {
             }
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, onMessage, channelOptions);
-            subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
-
-            subscriptionPromises.push(subsPromise);
+            subscriptionPromises.push(
+                this.pubsub.subscribe(triggerName, onMessage, channelOptions)
+                    .then(id => this.subscriptions[externalSubscriptionId].push(id))
+            );
         });
 
         // Resolve the promise with external sub id only after all subscriptions completed
