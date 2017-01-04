@@ -24,6 +24,7 @@ import {
 export interface PubSubEngine {
   publish(triggerName: string, payload: any): boolean
   subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>
+  subscribe(triggerName: string, onMessage: Function, options: Object, variables: Object): Promise<number>
   unsubscribe(subId: number)
 }
 
@@ -208,7 +209,7 @@ export class SubscriptionManager {
             }
 
             // 3. subscribe and keep the subscription id
-            const subsPromise = this.pubsub.subscribe(triggerName, onMessage, channelOptions);
+            const subsPromise = this.pubsub.subscribe(triggerName, onMessage, channelOptions, options.variables);
             subsPromise.then(id => this.subscriptions[externalSubscriptionId].push(id));
 
             subscriptionPromises.push(subsPromise);
