@@ -191,17 +191,23 @@ export class SubscriptionManager {
                     contextPromise = Promise.resolve(options.context);
                 }
                 contextPromise.then((context) => {
-                    if (!filter(rootValue, context)) {
+                    Promise.resolve().then(() => {
+                      return filter(rootValue, context);
+                    }).then((filterResult) => {
+                      if (!filterResult) {
                         return;
-                    }
-                    execute(
-                        this.schema,
-                        parsedQuery,
-                        rootValue,
-                        context,
-                        options.variables,
-                        options.operationName
-                    ).then( data => options.callback(null, data) )
+                      }
+                      execute(
+                          this.schema,
+                          parsedQuery,
+                          rootValue,
+                          context,
+                          options.variables,
+                          options.operationName
+                      ).then( data => options.callback(null, data) )
+                    }).catch((error) => {
+                      options.callback(error);
+                    });
                 }).catch((error) => {
                     options.callback(error);
                 });
