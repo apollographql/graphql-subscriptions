@@ -246,6 +246,10 @@ describe('SubscriptionManager', function() {
        testFilter(filterBoolean: $filterBoolean)
       }`;
     const callback = function(err, payload){
+      if (err) {
+        done(err);
+        return;
+      }
       try {
         expect(payload.data.testFilter).to.equals('goodFilter');
       } catch (e) {
