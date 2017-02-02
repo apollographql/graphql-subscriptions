@@ -190,7 +190,7 @@ export class SubscriptionManager {
                 } else {
                     contextPromise = Promise.resolve(options.context);
                 }
-                contextPromise.then((context) => {
+                return contextPromise.then((context) => {
                     if (!filter(rootValue, context)) {
                         return;
                     }
