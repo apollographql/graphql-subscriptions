@@ -183,28 +183,27 @@ export class SubscriptionManager {
             // resolver
             const onMessage = (rootValue) => {
                 return Promise.resolve().then(() => {
-                  if (typeof options.context === 'function') {
-                    return options.context();
-                  }
-                  return options.context;
+                    if (typeof options.context === 'function') {
+                        return options.context();
+                    }
+                    return options.context;
                 }).then((context) => {
-                    Promise.resolve().then(() => {
-                      return filter(rootValue, context);
-                    }).then((doExecute) => {
-                      if (!doExecute) {
-                        return;
-                      }
-                      execute(
-                          this.schema,
-                          parsedQuery,
-                          rootValue,
-                          context,
-                          options.variables,
-                          options.operationName
-                      ).then( data => options.callback(null, data) );
-                    }).catch((error) => {
-                      options.callback(error);
-                    });
+                    return Promise.all([
+                        context,
+                        filter(rootValue, context),
+                    ]);
+                }).then(([context, doExecute]) => {
+                  if (!doExecute) {
+                    return;
+                  }
+                  execute(
+                      this.schema,
+                      parsedQuery,
+                      rootValue,
+                      context,
+                      options.variables,
+                      options.operationName
+                  ).then( data => options.callback(null, data) );
                 }).catch((error) => {
                     options.callback(error);
                 });
