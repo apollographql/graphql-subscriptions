@@ -241,7 +241,7 @@ describe('SubscriptionManager', function() {
     });
   });
 
-  it('can use an async filter function', function(done) {
+  it('can use a filter function that returns a promise', function(done) {
     const query = `subscription Filter2($filterBoolean: Boolean){
        testFilter(filterBoolean: $filterBoolean)
       }`;
