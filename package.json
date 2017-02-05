@@ -15,7 +15,6 @@
   },
   "scripts": {
     "compile": "tsc",
-    "typings": "typings install",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
@@ -37,8 +36,7 @@
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
     "tslint": "^3.13.0",
-    "typescript": "^2.0.0",
-    "typings": "^1.3.2"
+    "typescript": "^2.0.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
