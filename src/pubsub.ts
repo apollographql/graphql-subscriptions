@@ -2,7 +2,7 @@
 // This is basically just event emitters wrapped with a function that filters messages.
 //
 import { EventEmitter } from 'events';
-import graphql, {
+import {
     GraphQLSchema,
     GraphQLError,
     validate,
@@ -11,20 +11,17 @@ import graphql, {
     specifiedRules,
     OperationDefinition,
     Field,
-    Variable,
-    IntValue,
+    valueFromAST,
 } from 'graphql';
 
-const valueFromAST = require('graphql').valueFromAST;
-
 import {
-    subscriptionHasSingleRootField
+    subscriptionHasSingleRootField,
 } from './validation';
 
 export interface PubSubEngine {
-  publish(triggerName: string, payload: any): boolean
-  subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>
-  unsubscribe(subId: number)
+  publish(triggerName: string, payload: any): boolean;
+  subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>;
+  unsubscribe(subId: number);
 }
 
 export class PubSub implements PubSubEngine {
@@ -32,7 +29,7 @@ export class PubSub implements PubSubEngine {
     private subscriptions: {[key: string]: [string, Function]};
     private subIdCounter: number;
 
-    constructor(){
+    constructor() {
         this.ee = new EventEmitter(); // max listeners = 10.
         this.subscriptions = {};
         this.subIdCounter = 0;
@@ -225,6 +222,6 @@ export class SubscriptionManager {
         this.subscriptions[subId].forEach( internalId => {
             this.pubsub.unsubscribe(internalId);
         });
-        delete this.subscriptions[subId]
+        delete this.subscriptions[subId];
     }
 }
