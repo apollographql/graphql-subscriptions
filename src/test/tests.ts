@@ -119,6 +119,13 @@ describe('SubscriptionManager', function() {
           'Filter1': {
             filter: (root) => root.filterBoolean === filterBoolean,
           },
+          Filter2: {
+            filter: (root) => {
+              return new Promise((resolve) => {
+                setTimeout(() => resolve(root.filterBoolean === filterBoolean), 10);
+              });
+            },
+          },
         };
       },
       'testFilterMulti': (options) => {
@@ -214,6 +221,10 @@ describe('SubscriptionManager', function() {
        testFilter(filterBoolean: $filterBoolean)
       }`;
     const callback = function(err, payload){
+      if (err) {
+        done(err);
+        return;
+      }
       try {
         expect(payload.data.testFilter).to.equals('goodFilter');
       } catch (e) {
@@ -230,6 +241,35 @@ describe('SubscriptionManager', function() {
     }).then(subId => {
       subManager.publish('Filter1', {filterBoolean: false });
       subManager.publish('Filter1', {filterBoolean: true });
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('can use a filter function that returns a promise', function(done) {
+    const query = `subscription Filter2($filterBoolean: Boolean){
+       testFilter(filterBoolean: $filterBoolean)
+      }`;
+    const callback = function(err, payload){
+      if (err) {
+        done(err);
+        return;
+      }
+      try {
+        expect(payload.data.testFilter).to.equals('goodFilter');
+      } catch (e) {
+        done(e);
+        return;
+      }
+      done();
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'Filter2',
+      variables: { filterBoolean: true},
+      callback,
+    }).then(subId => {
+      subManager.publish('Filter2', {filterBoolean: false });
+      subManager.publish('Filter2', {filterBoolean: true });
       subManager.unsubscribe(subId);
     });
   });
@@ -356,6 +396,33 @@ describe('SubscriptionManager', function() {
     };
     const context = function() {
       return 'trigger';
+    };
+    subManager.subscribe({
+      query,
+      context,
+      operationName: 'TestContext',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('contextTrigger', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('call the error callback if a context functions throws an error', function(done) {
+    const query = `subscription TestContext { testContext }`;
+    const callback = function(err, payload){
+      try {
+        expect(payload).to.be.undefined;
+        expect(err.message).to.equals('context error');
+      } catch (e) {
+        done(e);
+        return;
+      }
+      done();
+    };
+    const context = function() {
+      throw new Error('context error');
     };
     subManager.subscribe({
       query,

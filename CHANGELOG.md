@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- allow filter functions to be async
 
 ### 0.2.3
 - update `graphql` dependency to 0.9.0

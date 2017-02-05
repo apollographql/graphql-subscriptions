@@ -182,26 +182,28 @@ export class SubscriptionManager {
             // convention this is the value returned from the mutation
             // resolver
             const onMessage = (rootValue) => {
-                let contextPromise;
-                if (typeof options.context === 'function') {
-                    contextPromise = new Promise((resolve) => {
-                        resolve(options.context());
-                    });
-                } else {
-                    contextPromise = Promise.resolve(options.context);
-                }
-                return contextPromise.then((context) => {
-                    if (!filter(rootValue, context)) {
-                        return;
+                return Promise.resolve().then(() => {
+                    if (typeof options.context === 'function') {
+                        return options.context();
                     }
-                    execute(
-                        this.schema,
-                        parsedQuery,
-                        rootValue,
+                    return options.context;
+                }).then((context) => {
+                    return Promise.all([
                         context,
-                        options.variables,
-                        options.operationName
-                    ).then( data => options.callback(null, data) )
+                        filter(rootValue, context),
+                    ]);
+                }).then(([context, doExecute]) => {
+                  if (!doExecute) {
+                    return;
+                  }
+                  execute(
+                      this.schema,
+                      parsedQuery,
+                      rootValue,
+                      context,
+                      options.variables,
+                      options.operationName
+                  ).then( data => options.callback(null, data) );
                 }).catch((error) => {
                     options.callback(error);
                 });
