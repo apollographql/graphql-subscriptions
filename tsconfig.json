@@ -10,7 +10,15 @@
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true,
-    "declaration": true
+    "declaration": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "types": [
+      "@types/es6-promise",
+      "@types/node",
+      "typed-graphql"
+    ]
   },
   "exclude": [
     "node_modules",
