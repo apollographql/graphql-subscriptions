@@ -165,6 +165,11 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
     variableValues?: {[key: string]: any},
     operationName?: string,
   ): IObservable<ExecutionResult> {
+    const errors = validate(schema, document);
+    if ( errors.length > 0 ) {
+      return Observable.of({ errors: [new ValidationError(errors)] });
+    }
+
     const operationAST = getOperationAST(document, operationName);
     if ( null === operationAST ) {
       return Observable.of({ errors: [new Error(`could not parse operation on query`)] });
@@ -177,6 +182,35 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
     }
   }
 
+  public execute(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+    rootValue?: any,
+    contextValue?: any,
+    variableValues?: {[key: string]: any},
+    operationName?: string,
+  ): Promise<ExecutionResult> {
+    return new Promise((resolve, reject) => {
+      const promiseSub = new Observable((observer) => {
+        const sub = this.executeReactive(schema, document, rootValue, contextValue, variableValues, operationName)
+        .subscribe({
+          next: (v) => {
+            observer.next(v)
+            observer.complete();
+          },
+          error: (e) => observer.error(e),
+          complete: observer.complete,
+        });
+
+        return sub;
+      }).subscribe({
+        next: (v) => resolve(v),
+        error: (e) => reject(e),
+        complete: () => promiseSub.unsubscribe(),
+      });
+    });
+  }
+
   protected handleStatic(
     schema: GraphQLSchema,
     document: DocumentNode,
@@ -186,7 +220,7 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
     operationName?: string,
   ): IObservable<ExecutionResult> {
     return new Observable((observer) => {
-      execute(schema, document, rootValue, contextValue, variableValues, operationName)
+      Promise.resolve(undefined).then(() => execute(schema, document, rootValue, contextValue, variableValues, operationName))
       .then((value) => {
         observer.next(value);
         observer.complete();

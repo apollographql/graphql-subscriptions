@@ -18,6 +18,7 @@ import { PubSub } from '../pubsub';
 import { SubscriptionManager } from '../SubscriptionManager';
 
 import { subscriptionHasSingleRootField } from '../validation';
+import { GraphQLExecutorWithSubscriptions } from '../GraphQLExecutorWithSubscriptions';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -642,5 +643,64 @@ describe('SubscriptionValidationRule', function() {
     const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
     expect(errors.length).to.equals(1);
     expect(errors[0].message).to.equals('Apollo subscriptions do not support fragments on the root field');
+  });
+});
+
+describe('GraphQLExecutorWithSubscriptions', function() {
+  const pubsub = new PubSub();
+  const executor = new GraphQLExecutorWithSubscriptions({
+    pubsub,
+    setupFunctions: {},
+  });
+
+  it('runs queries as well', () => {
+    return executor.execute(
+      schema,
+      parse(`query { testString }`),
+    ).then((result) => {
+      expect(result.data).to.be.a('object');
+      expect(result.data['testString']).to.be.equal('works');
+    });
+  });
+
+  it('rejects with bad variables', () => {
+    return executor.execute(
+      schema,
+      parse(`query { testString }`),
+      undefined,
+      undefined,
+      () => ({}), // should be an map
+    ).then((result) => {
+      assert(false);
+    }, (e) => {
+      expect(e.message).to.equal(
+        'Variables must be provided as an Object where each property is a variable value.' +
+        ' Perhaps look to see if an unparsed JSON string was provided.'
+      );
+    });
+  });
+
+  it('returns error on bad operation', () => {
+    return executor.execute(
+      schema,
+      parse(`query A { testString }`),
+      undefined,
+      undefined,
+      undefined,
+      'NoSuchOperation',
+    ).then((result) => {
+      expect(result.errors).to.be.a('array');
+      expect(result.errors[0].message).to.be.equal('could not parse operation on query');
+    });
+  });
+
+  it('returns error on bad query', () => {
+    return executor.execute(
+      schema,
+      parse(`query { does not exists }`),
+    ).then((result) => {
+      expect(result.errors).to.be.a('array');
+      expect(result.errors[0].message).to.be.equal('Subscription query has validation errors');
+    });
   });
 });
