@@ -8,7 +8,9 @@
     "url": "https://github.com/apollostack/graphql-subscriptions.git"
   },
   "dependencies": {
-    "es6-promise": "^3.2.1"
+    "es6-promise": "^3.2.1",
+    "graphql-server-core": "file://../graphql-server/packages/graphql-server-core",
+    "graphql-server-reactive-core": "file://../graphql-server/packages/graphql-server-reactive-core"
   },
   "peerDependencies": {
     "graphql": "^0.7.0 || ^0.8.0 || ^0.9.0"
@@ -25,6 +27,7 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "devDependencies": {
+    "@types/graphql": "^0.8.6",
     "@types/mocha": "^2.2.39",
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",

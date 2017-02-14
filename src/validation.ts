@@ -1,12 +1,11 @@
 import {
   ValidationContext,
-  Selection,
+  SelectionNode,
   GraphQLError,
 } from 'graphql';
 
 // XXX I don't know how else to do this. Can't seem to import from GraphQL.
 const FIELD = 'Field';
-
 
 export function tooManySubscriptionFieldsError(subscriptionName: string): string {
   return `Subscription "${subscriptionName}" must have only one field.`;
@@ -21,7 +20,7 @@ export function subscriptionHasSingleRootField(context: ValidationContext): any 
     OperationDefinition(node) {
       const operationName = node.name ? node.name.value : '';
       let numFields = 0;
-      node.selectionSet.selections.forEach( (selection: Selection) => {
+      node.selectionSet.selections.forEach( (selection: SelectionNode) => {
         if (selection.kind === FIELD) {
           numFields++;
         } else {

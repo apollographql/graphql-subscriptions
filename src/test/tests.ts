@@ -13,10 +13,8 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 
-import {
-    PubSub,
-    SubscriptionManager,
-} from '../pubsub';
+import { PubSub } from '../pubsub';
+import { SubscriptionManager } from '../SubscriptionManager';
 
 import { subscriptionHasSingleRootField } from '../validation';
 
@@ -31,7 +29,7 @@ describe('PubSub', function() {
     ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
       done();
-    }).then(() => {
+    }, undefined).then(() => {
       const succeed = ps.publish('a', 'test');
       expect(succeed).to.be.true;
     });
@@ -41,7 +39,7 @@ describe('PubSub', function() {
     const ps = new PubSub();
     ps.subscribe('a', payload => {
       assert(false);
-    }).then((subId) => {
+    }, undefined).then((subId) => {
       ps.unsubscribe(subId);
       const succeed = ps.publish('a', 'test');
       expect(succeed).to.be.true; // True because publish success is not
@@ -122,7 +120,6 @@ const schema = new GraphQLSchema({
 
 describe('SubscriptionManager', function() {
   let capturedArguments: Object;
-
   const pubsub = new PubSub();
 
   const subManager = new SubscriptionManager({
@@ -232,7 +229,7 @@ describe('SubscriptionManager', function() {
     };
 
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.publish('testSubscription', 'good');
+      pubsub.publish('testSubscription', 'good');
       subManager.unsubscribe(subId);
     });
   });
@@ -260,8 +257,8 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true},
       callback,
     }).then(subId => {
-      subManager.publish('Filter1', {filterBoolean: false });
-      subManager.publish('Filter1', {filterBoolean: true });
+      pubsub.publish('Filter1', {filterBoolean: false });
+      pubsub.publish('Filter1', {filterBoolean: true });
       subManager.unsubscribe(subId);
     });
   });
@@ -289,8 +286,8 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true},
       callback,
     }).then(subId => {
-      subManager.publish('Filter2', {filterBoolean: false });
-      subManager.publish('Filter2', {filterBoolean: true });
+      pubsub.publish('Filter2', {filterBoolean: false });
+      pubsub.publish('Filter2', {filterBoolean: true });
       subManager.unsubscribe(subId);
     });
   });
@@ -321,9 +318,9 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true, uga: 'UGA'},
       callback,
     }).then(subId => {
-      subManager.publish('NotATrigger', {filterBoolean: false});
-      subManager.publish('Trigger1', {filterBoolean: true });
-      subManager.publish('Trigger2', {filterBoolean: true });
+      pubsub.publish('NotATrigger', {filterBoolean: false});
+      pubsub.publish('Trigger1', {filterBoolean: true });
+      pubsub.publish('Trigger2', {filterBoolean: true });
       subManager.unsubscribe(subId);
     });
   });
@@ -366,7 +363,7 @@ describe('SubscriptionManager', function() {
     };
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subManager.unsubscribe(subId);
-      subManager.publish('testSubscription', 'bad');
+      pubsub.publish('testSubscription', 'bad');
       setTimeout(done, 30);
     });
   });
@@ -403,7 +400,7 @@ describe('SubscriptionManager', function() {
     };
 
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.publish('testSubscription', 'good');
+      pubsub.publish('testSubscription', 'good');
       subManager.unsubscribe(subId);
     });
   });
@@ -425,7 +422,7 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('contextTrigger', 'ignored');
+      pubsub.publish('contextTrigger', 'ignored');
       subManager.unsubscribe(subId);
     });
   });
@@ -452,7 +449,7 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('contextTrigger', 'ignored');
+      pubsub.publish('contextTrigger', 'ignored');
       subManager.unsubscribe(subId);
     });
   });
@@ -477,7 +474,7 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('Trigger1', 'ignored');
+      pubsub.publish('Trigger1', 'ignored');
       subManager.unsubscribe(subId);
     });
   });
@@ -502,11 +499,12 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('Trigger1', 'ignored');
+      pubsub.publish('Trigger1', 'ignored');
       subManager.unsubscribe(subId);
     });
   });
 });
+
 // ---------------------------------------------
 // validation tests ....
 
@@ -556,7 +554,6 @@ describe('SubscriptionValidationRule', function() {
     const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
     expect(errors.length).to.equals(0);
   });
-
 
   it('should not allow two fields in the subscription', function() {
     const sub = `subscription S3{
