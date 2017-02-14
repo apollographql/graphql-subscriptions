@@ -61,7 +61,6 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
     variableValues?: {[key: string]: any},
     operationName?: string,
   ): IObservable<ExecutionResult> {
-
     // 1. validate the query, operationName and variables
     const errors = validate(
       schema,
@@ -78,22 +77,19 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
     let args = {};
 
     // operationName is the name of the only root field in the subscription document
+    const definition = getOperationAST(document, operationName);
     let subscriptionName = '';
-    document.definitions.forEach( definition => {
-        if (definition.kind === 'OperationDefinition'){
-            // only one root field is allowed on subscription. No fragments for now.
-            const rootField = (definition as OperationDefinitionNode).selectionSet.selections[0] as FieldNode;
-            subscriptionName = rootField.name.value;
 
-            const fields = schema.getSubscriptionType().getFields();
-            args = getArgumentValues(fields[subscriptionName], rootField, variableValues);
-        }
-    });
+    // only one root field is allowed on subscription. No fragments for now.
+    const rootField = (definition as OperationDefinitionNode).selectionSet.selections[0] as FieldNode;
+    subscriptionName = rootField.name.value;
+
+    const fields = schema.getSubscriptionType().getFields();
+    args = getArgumentValues(fields[subscriptionName], rootField, variableValues);
 
     let triggerMap: TriggerMap;
 
     if (this.setupFunctions[subscriptionName]) {
-        // TODO: resolve this
         triggerMap = this.setupFunctions[subscriptionName]({
           query: print(document),
           operationName,

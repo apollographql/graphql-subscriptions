@@ -242,7 +242,7 @@ describe('SubscriptionManager', function() {
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subscriptionId = subId;
       pubsub.publish('testSubscription', 'good');
-    });
+    }, done);
   });
 
   it('can use filter functions properly', function(done) {
@@ -273,7 +273,7 @@ describe('SubscriptionManager', function() {
       subscriptionId = subId;
       pubsub.publish('Filter1', {filterBoolean: false });
       pubsub.publish('Filter1', {filterBoolean: true });
-    });
+    }, done);
   });
 
   it('can use a filter function that returns a promise', function(done) {
@@ -305,7 +305,7 @@ describe('SubscriptionManager', function() {
       subscriptionId = subId;
       pubsub.publish('Filter2', {filterBoolean: false });
       pubsub.publish('Filter2', {filterBoolean: true });
-    });
+    }, done);
   });
 
   it('can subscribe to more than one trigger', function(done) {
@@ -340,7 +340,7 @@ describe('SubscriptionManager', function() {
       pubsub.publish('NotATrigger', {filterBoolean: false});
       pubsub.publish('Trigger1', {filterBoolean: true });
       pubsub.publish('Trigger2', {filterBoolean: true });
-    });
+    }, done);
   });
 
   it('can subscribe to a trigger and pass options to PubSub using "channelOptions"', function(done) {
@@ -387,7 +387,7 @@ describe('SubscriptionManager', function() {
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subscriptionId = subId;
       pubsub.publish('testSubscription', 'bad');
-    });
+    }, done);
   });
 
   it('throws an error when trying to unsubscribe from unknown id', function () {
@@ -426,7 +426,7 @@ describe('SubscriptionManager', function() {
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
       subscriptionId = subId;
       pubsub.publish('testSubscription', 'good');
-    });
+    }, done);
   });
 
   it('calls context if it is a function', function(done) {
@@ -454,7 +454,7 @@ describe('SubscriptionManager', function() {
     }).then(subId => {
       subscriptionId = subId;
       pubsub.publish('contextTrigger', 'ignored');
-    });
+    }, done);
   });
 
   it('call the error callback if a context functions throws an error', function(done) {
@@ -483,7 +483,30 @@ describe('SubscriptionManager', function() {
     }).then(subId => {
       subscriptionId = subId;
       pubsub.publish('contextTrigger', 'ignored');
-    });
+    }, done);
+  });
+
+  it('runs the correct operation', function(done) {
+    const query = 'subscription S { testSubscription }\n\nquery Q { testString }';
+    let subscriptionId = undefined;
+    const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
+      try {
+        if (err) {
+          throw err;
+        }
+
+        expect(payload.data.testSubscription).to.equals('good');
+      } catch (e) {
+        return done(e);
+      }
+      return done();
+    };
+
+    subManager.subscribe({ query, operationName: 'S', callback }).then(subId => {
+      subscriptionId = subId;
+      pubsub.publish('testSubscription', 'good');
+    }, done);
   });
 
   it('passes arguments to setupFunction', function(done) {
