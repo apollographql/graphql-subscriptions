@@ -94,14 +94,11 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
 
     if (this.setupFunctions[subscriptionName]) {
         // TODO: resolve this
-        triggerMap = this.setupFunctions[subscriptionName](undefined as {
-          query: string;
-          operationName: string;
-          callback: Function;
-          variables?: { [key: string]: any };
-          context?: any;
-          formatError?: Function;
-          formatResponse?: Function;
+        triggerMap = this.setupFunctions[subscriptionName]({
+          query: print(document),
+          operationName,
+          variables: variableValues,
+          contextValue,
         }, args, subscriptionName);
     } else {
         // if not provided, the triggerName will be the subscriptionName, The trigger will not have any
@@ -124,10 +121,10 @@ export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
           // resolver
           const onMessage = (rootValue) => {
               return Promise.resolve().then(() => {
-                  if (typeof context === 'function') {
-                      return (<Function>context)();
+                  if (typeof contextValue === 'function') {
+                      return (<Function>contextValue)();
                   }
-                  return context;
+                  return contextValue;
               }).then((curContext) => {
                   return Promise.all([
                       curContext,

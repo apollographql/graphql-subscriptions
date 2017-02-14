@@ -60,7 +60,10 @@ export class SubscriptionManager {
         this.subscriptions[externalSubscriptionId] = resultObservable.subscribe({
           next: (v) => options.callback(undefined, v),
           error: (e) => options.callback(e, undefined),
-          complete: () => this.unsubscribe(externalSubscriptionId),
+          // XXX: Old subscription manager behavior was not to clean for the user,
+          // and error on double clear. do we want to fix it?
+          // complete: () => this.unsubscribe(externalSubscriptionId),
+          complete: () => {/* noop */},
         });
 
         // Resolve the promise with external sub id only after all subscriptions completed
@@ -68,8 +71,8 @@ export class SubscriptionManager {
     }
 
     public unsubscribe(subId: number){
-        if ( ! this.subscriptions.hasOwnProperty(subId) ) {
-          return;
+        if ( false === this.subscriptions.hasOwnProperty(subId) ) {
+          throw new Error(`${subId} is not a valid subscription id`);
         }
 
         this.subscriptions[subId].unsubscribe();

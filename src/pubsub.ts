@@ -21,7 +21,7 @@ export class PubSub implements PubSubEngine {
     }
 
     public publish(triggerName: string, payload: any): boolean {
-        this.ee.emit(triggerName, payload);
+        process.nextTick(() => this.ee.emit(triggerName, payload));
         // Not using the value returned from emit method because it gives
         // irrelevant false when there are no listeners.
         return true;
