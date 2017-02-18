@@ -1,7 +1,7 @@
 import { GraphQLExecutorWithSubscriptions } from './GraphQLExecutorWithSubscriptions';
 import { GraphQLSchema, validate, specifiedRules, parse} from 'graphql';
 import { SetupFunctions, ValidationError } from './GraphQLExecutorWithSubscriptions';
-import { Subscription } from 'graphql-server-reactive-core';
+import { Subscription } from 'graphql-server-observable';
 import { PubSubEngine } from './pubsub';
 
 export interface SubscriptionOptions {

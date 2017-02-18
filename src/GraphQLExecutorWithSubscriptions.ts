@@ -1,7 +1,7 @@
 import { execute, OperationDefinitionNode, FieldNode, GraphQLError, validate, DocumentNode, getOperationAST, GraphQLSchema, ExecutionResult, print } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
-import { RGQLExecutor, Observable, IObservable } from 'graphql-server-reactive-core';
-import {  PubSubEngine } from './pubsub';
+import { Observable, IObservable } from 'graphql-server-observable';
+import { PubSubEngine } from './pubsub';
 import {
     subscriptionHasSingleRootField,
 } from './validation';
@@ -44,7 +44,7 @@ export class ValidationError extends Error {
     }
 }
 
-export class GraphQLExecutorWithSubscriptions implements RGQLExecutor {
+export class GraphQLExecutorWithSubscriptions {
   private pubsub: PubSubEngine;
   private setupFunctions: SetupFunctions
 

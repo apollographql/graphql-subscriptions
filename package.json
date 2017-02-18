@@ -9,8 +9,7 @@
   },
   "dependencies": {
     "es6-promise": "^3.2.1",
-    "graphql-server-core": "file://../graphql-server/packages/graphql-server-core",
-    "graphql-server-reactive-core": "file://../graphql-server/packages/graphql-server-reactive-core"
+    "graphql-server-observable": "file://../graphql-server/packages/graphql-server-observable"
   },
   "peerDependencies": {
     "graphql": "^0.7.0 || ^0.8.0 || ^0.9.0"
