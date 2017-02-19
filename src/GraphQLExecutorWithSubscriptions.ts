@@ -53,7 +53,61 @@ export class GraphQLExecutorWithSubscriptions {
     this.pubsub = options.pubsub;
   }
 
-  public handleSubscription(
+  public executeReactive(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+    rootValue?: any,
+    contextValue?: any,
+    variableValues?: {[key: string]: any},
+    operationName?: string,
+  ): IObservable<ExecutionResult> {
+    const errors = validate(schema, document);
+    if ( errors.length > 0 ) {
+      return Observable.of({ errors: [new ValidationError(errors)] });
+    }
+
+    const operationAST = getOperationAST(document, operationName);
+    if ( null === operationAST ) {
+      return Observable.of({ errors: [new Error(`could not parse operation on query`)] });
+    }
+
+    if ( operationAST.operation === 'subscription' ) {
+      return this.handleSubscription(schema, document, rootValue, contextValue, variableValues, operationName);
+    } else {
+      return this.handleStatic(schema, document, rootValue, contextValue, variableValues, operationName);
+    }
+  }
+
+  public execute(
+    schema: GraphQLSchema,
+    document: DocumentNode,
+    rootValue?: any,
+    contextValue?: any,
+    variableValues?: {[key: string]: any},
+    operationName?: string,
+  ): Promise<ExecutionResult> {
+    return new Promise((resolve, reject) => {
+      const promiseSub = new Observable((observer) => {
+        const sub = this.executeReactive(schema, document, rootValue, contextValue, variableValues, operationName)
+        .subscribe({
+          next: (v) => {
+            observer.next(v)
+            observer.complete();
+          },
+          error: (e) => observer.error(e),
+          complete: observer.complete,
+        });
+
+        return sub;
+      }).subscribe({
+        next: (v) => resolve(v),
+        error: (e) => reject(e),
+        complete: () => promiseSub.unsubscribe(),
+      });
+    });
+  }
+
+  protected handleSubscription(
     schema: GraphQLSchema,
     document: DocumentNode,
     rootValue?: any,
@@ -154,60 +208,6 @@ export class GraphQLExecutorWithSubscriptions {
           subIds.forEach((id) => this.pubsub.unsubscribe(id));
         });
       };
-    });
-  }
-
-  public executeReactive(
-    schema: GraphQLSchema,
-    document: DocumentNode,
-    rootValue?: any,
-    contextValue?: any,
-    variableValues?: {[key: string]: any},
-    operationName?: string,
-  ): IObservable<ExecutionResult> {
-    const errors = validate(schema, document);
-    if ( errors.length > 0 ) {
-      return Observable.of({ errors: [new ValidationError(errors)] });
-    }
-
-    const operationAST = getOperationAST(document, operationName);
-    if ( null === operationAST ) {
-      return Observable.of({ errors: [new Error(`could not parse operation on query`)] });
-    }
-
-    if ( operationAST.operation === 'subscription' ) {
-      return this.handleSubscription(schema, document, rootValue, contextValue, variableValues, operationName);
-    } else {
-      return this.handleStatic(schema, document, rootValue, contextValue, variableValues, operationName);
-    }
-  }
-
-  public execute(
-    schema: GraphQLSchema,
-    document: DocumentNode,
-    rootValue?: any,
-    contextValue?: any,
-    variableValues?: {[key: string]: any},
-    operationName?: string,
-  ): Promise<ExecutionResult> {
-    return new Promise((resolve, reject) => {
-      const promiseSub = new Observable((observer) => {
-        const sub = this.executeReactive(schema, document, rootValue, contextValue, variableValues, operationName)
-        .subscribe({
-          next: (v) => {
-            observer.next(v)
-            observer.complete();
-          },
-          error: (e) => observer.error(e),
-          complete: observer.complete,
-        });
-
-        return sub;
-      }).subscribe({
-        next: (v) => resolve(v),
-        error: (e) => reject(e),
-        complete: () => promiseSub.unsubscribe(),
-      });
     });
   }
 
