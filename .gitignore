@@ -4,3 +4,4 @@ dist
 coverage
 typings
 npm-debug.log
+browser/

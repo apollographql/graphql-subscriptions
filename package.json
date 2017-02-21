@@ -3,6 +3,7 @@
   "version": "0.3.0",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
+  "browser": "browser/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/apollostack/graphql-subscriptions.git"
@@ -22,7 +23,9 @@
     "watch": "tsc -w",
     "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "browser-compile": "webpack",
+    "prepublish": "npm run compile && npm run browser-compile"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.39",
@@ -36,7 +39,8 @@
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
     "tslint": "^3.13.0",
-    "typescript": "^2.0.0"
+    "typescript": "^2.0.0",
+    "webpack": "^2.2.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
