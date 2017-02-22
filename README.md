@@ -4,9 +4,13 @@
 
 GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
 
+> `graphql-subscriptions` is an extension for GraphQL, and you can use it with any GraphQL client and server (not only Apollo).
+
 ### Installation
 
 `npm install graphql-subscriptions`
+
+> This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
 
 
 ### Example usage
