@@ -1,7 +1,7 @@
 # Changelog
 
 ### vNEXT
-- ...
+- Transpiling index.js to target browsers using webpack. [PR #48](https://github.com/apollographql/graphql-subscriptions/pull/48)
 
 ### 0.3.0
 - Allow `setupFunctions` to be async (return `Promise`) (https://github.com/apollographql/graphql-subscriptions/pull/41)
