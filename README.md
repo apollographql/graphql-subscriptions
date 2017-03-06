@@ -2,6 +2,8 @@
 
 # graphql-subscriptions
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/apollographql/graphql-subscriptions.svg)](https://greenkeeper.io/)
+
 GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
 
 > `graphql-subscriptions` is an extension for GraphQL, and you can use it with any GraphQL client and server (not only Apollo).
