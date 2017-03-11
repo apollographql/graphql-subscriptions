@@ -11,8 +11,8 @@ import {
     specifiedRules,
     OperationDefinition,
     Field,
-    valueFromAST,
 } from 'graphql';
+import { getArgumentValues } from 'graphql/execution/values';
 
 import {
     subscriptionHasSingleRootField,
@@ -132,7 +132,7 @@ export class SubscriptionManager {
             return Promise.reject<number>(new ValidationError(errors));
         }
 
-        const args = {};
+        let args = {};
 
         // operationName is the name of the only root field in the subscription document
         let subscriptionName = '';
@@ -143,13 +143,7 @@ export class SubscriptionManager {
                 subscriptionName = rootField.name.value;
 
                 const fields = this.schema.getSubscriptionType().getFields();
-                rootField.arguments.forEach( arg => {
-                    // we have to get the one arg's definition from the schema
-                    const argDefinition = fields[subscriptionName].args.filter(
-                        argDef => argDef.name === arg.name.value
-                    )[0];
-                    args[argDefinition.name] = valueFromAST(arg.value, argDefinition.type, options.variables);
-                });
+                args = getArgumentValues(fields[subscriptionName], rootField, options.variables);
             }
         });
 
