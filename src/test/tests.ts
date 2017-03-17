@@ -104,11 +104,25 @@ const schema = new GraphQLSchema({
           return root;
         },
       },
+      testArguments: {
+        type: GraphQLString,
+        resolve: (root, { testArgument }) => {
+          return String(testArgument);
+        },
+        args: {
+          testArgument: {
+            type: GraphQLInt,
+            defaultValue: 1234,
+          },
+        },
+      },
     },
   }),
 });
 
 describe('SubscriptionManager', function() {
+  let capturedArguments: Object;
+
   const pubsub = new PubSub();
 
   const subManager = new SubscriptionManager({
@@ -154,11 +168,18 @@ describe('SubscriptionManager', function() {
           },
         };
       },
+      testArguments(opts, args) {
+        capturedArguments = args;
+        return {
+          Trigger1: {},
+        };
+      },
     },
     pubsub,
    });
 
   beforeEach(() => {
+    capturedArguments = undefined;
     sinon.spy(pubsub, 'subscribe');
   });
 
@@ -435,9 +456,57 @@ describe('SubscriptionManager', function() {
       subManager.unsubscribe(subId);
     });
   });
+
+  it('passes arguments to setupFunction', function(done) {
+    const query = `subscription TestArguments {
+      testArguments(testArgument: 10)
+    }`;
+    const callback = function(error, payload) {
+      try {
+        expect(error).to.be.null;
+        expect(capturedArguments).to.eql({ testArgument: 10 });
+        expect(payload.data.testArguments).to.equal('10');
+        done();
+      } catch (error) {
+        done(error);
+      }
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'TestArguments',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('Trigger1', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('passes defaultValue of argument to setupFunction', function(done) {
+    const query = `subscription TestArguments {
+      testArguments
+    }`;
+    const callback = function(error, payload) {
+      try {
+        expect(error).to.be.null;
+        expect(capturedArguments).to.eql({ testArgument: 1234 });
+        expect(payload.data.testArguments).to.equal('1234');
+        done();
+      } catch (error) {
+        done(error);
+      }
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'TestArguments',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('Trigger1', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
 });
-
-
 // ---------------------------------------------
 // validation tests ....
 
