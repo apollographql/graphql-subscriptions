@@ -1,7 +1,6 @@
 import { GraphQLExecutorWithSubscriptions } from './GraphQLExecutorWithSubscriptions';
 import { GraphQLSchema, validate, specifiedRules, parse} from 'graphql';
 import { SetupFunctions, ValidationError } from './GraphQLExecutorWithSubscriptions';
-import { Subscription } from 'graphql-server-observable';
 import { PubSubEngine } from './pubsub';
 
 export interface SubscriptionOptions {
@@ -18,7 +17,7 @@ export interface SubscriptionOptions {
 export class SubscriptionManager {
     private schema: GraphQLSchema;
     private executor: GraphQLExecutorWithSubscriptions;
-    private subscriptions: { [externalId: number]: Subscription };
+    private subscriptions: { [externalId: number]: { unsubscribe: () => void } };
     private maxSubscriptionId: number;
 
     constructor(options: {  schema: GraphQLSchema,
@@ -58,7 +57,7 @@ export class SubscriptionManager {
         );
 
         this.subscriptions[externalSubscriptionId] = resultObservable.subscribe({
-          next: (v) => options.callback(undefined, v),
+          next: (v) => options.callback(null, v),
           error: (e) => options.callback(e, undefined),
           // XXX: Old subscription manager behavior was not to clean for the user,
           // and error on double clear. do we want to fix it?

@@ -436,7 +436,7 @@ describe('SubscriptionManager', function() {
     const callback = function(error, payload) {
       subManager.unsubscribe(subscriptionId);
       try {
-        expect(error).to.be.undefined;
+        expect(error).to.be.null;
         expect(payload.data.testContext).to.eq('trigger');
       } catch (e) {
         return done(e);
@@ -514,7 +514,9 @@ describe('SubscriptionManager', function() {
     const query = `subscription TestArguments {
       testArguments(testArgument: 10)
     }`;
+    let subscriptionId = undefined;
     const callback = function(error, payload) {
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(error).to.be.null;
         expect(capturedArguments).to.eql({ testArgument: 10 });
@@ -530,8 +532,8 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
+      subscriptionId = subId;
       pubsub.publish('Trigger1', 'ignored');
-      subManager.unsubscribe(subId);
     });
   });
 
@@ -539,7 +541,9 @@ describe('SubscriptionManager', function() {
     const query = `subscription TestArguments {
       testArguments
     }`;
+    let subscriptionId = undefined;
     const callback = function(error, payload) {
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(error).to.be.null;
         expect(capturedArguments).to.eql({ testArgument: 1234 });
@@ -555,8 +559,8 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
+      subscriptionId = subId;
       pubsub.publish('Trigger1', 'ignored');
-      subManager.unsubscribe(subId);
     });
   });
 });

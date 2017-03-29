@@ -1,6 +1,5 @@
 import { execute, OperationDefinitionNode, FieldNode, GraphQLError, validate, DocumentNode, getOperationAST, GraphQLSchema, ExecutionResult, print } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
-import { Observable, IObservable } from 'graphql-server-observable';
 import { PubSubEngine } from './pubsub';
 import {
     subscriptionHasSingleRootField,
@@ -27,10 +26,10 @@ export interface SetupFunctions {
 
 export interface IObservable<T> {
   subscribe(observer: {
-    next: (v: any) => void;
-    error: (e: Error) => void;
-    complete: () => void
-  }): () => void;
+    next?: (v: T) => void;
+    error?: (e: Error) => void;
+    complete?: () => void
+  }): { unsubscribe: () => void };
 }
 
 export class ValidationError extends Error {
@@ -42,6 +41,16 @@ export class ValidationError extends Error {
         this.errors = errors;
         this.message = 'Subscription query has validation errors';
     }
+}
+
+function ObservableOfErrors(errors: Error[]) {
+  return {
+    subscribe: (observer) => {
+      observer.next && observer.next({ errors });
+      observer.complete && observer.complete();
+      return { unsubscribe: () => {/* noop */} };
+    },
+  };
 }
 
 export class GraphQLExecutorWithSubscriptions {
@@ -60,15 +69,15 @@ export class GraphQLExecutorWithSubscriptions {
     contextValue?: any,
     variableValues?: {[key: string]: any},
     operationName?: string,
-  ): IObservable<ExecutionResult> {
+  ) {
     const errors = validate(schema, document);
     if ( errors.length > 0 ) {
-      return Observable.of({ errors: [new ValidationError(errors)] });
+      return ObservableOfErrors([new ValidationError(errors)]);
     }
 
     const operationAST = getOperationAST(document, operationName);
     if ( null === operationAST ) {
-      return Observable.of({ errors: [new Error(`could not parse operation on query`)] });
+      return ObservableOfErrors([new Error(`could not parse operation on query`)]);
     }
 
     if ( operationAST.operation === 'subscription' ) {
@@ -87,23 +96,15 @@ export class GraphQLExecutorWithSubscriptions {
     operationName?: string,
   ): Promise<ExecutionResult> {
     return new Promise((resolve, reject) => {
-      const promiseSub = new Observable((observer) => {
-        const sub = this.executeReactive(schema, document, rootValue, contextValue, variableValues, operationName)
+      const sub = this.executeReactive(schema, document, rootValue, contextValue, variableValues, operationName)
         .subscribe({
           next: (v) => {
-            observer.next(v)
-            observer.complete();
+            resolve(v)
+            process.nextTick(() => sub.unsubscribe());
           },
-          error: (e) => observer.error(e),
-          complete: observer.complete,
+          error: (e) => reject(e),
+          complete: () => { /* noop */ },
         });
-
-        return sub;
-      }).subscribe({
-        next: (v) => resolve(v),
-        error: (e) => reject(e),
-        complete: () => promiseSub.unsubscribe(),
-      });
     });
   }
 
@@ -125,7 +126,7 @@ export class GraphQLExecutorWithSubscriptions {
     // TODO: validate that all variables have been passed (and are of correct type)?
     if (errors.length){
       // this error kills the subscription, so we throw it.
-      return Observable.of({ errors: [new ValidationError(errors)] });
+      return ObservableOfErrors([new ValidationError(errors)]);
     }
 
     let args = {};
@@ -156,59 +157,63 @@ export class GraphQLExecutorWithSubscriptions {
         triggerMap = {[subscriptionName]: {}};
     }
 
-    return new Observable((observer) => {
-      const subscriptionPromises: Promise<number>[] = Object.keys(triggerMap).map( triggerName => {
-          // Deconstruct the trigger options and set any defaults
-          const {
-              channelOptions = {},
-              filter = () => true, // Let all messages through by default.
-          } = triggerMap[triggerName];
+    return {
+      subscribe: (observer) => {
+        const subscriptionPromises: Promise<number>[] = Object.keys(triggerMap).map( triggerName => {
+            // Deconstruct the trigger options and set any defaults
+            const {
+                channelOptions = {},
+                filter = () => true, // Let all messages through by default.
+            } = triggerMap[triggerName];
 
-          // 2. generate the handler function
-          //
-          // rootValue is the payload sent by the event emitter / trigger by
-          // convention this is the value returned from the mutation
-          // resolver
-          const onMessage = (rootValue) => {
-              return Promise.resolve().then(() => {
-                  if (typeof contextValue === 'function') {
-                      return (<Function>contextValue)();
+            // 2. generate the handler function
+            //
+            // rootValue is the payload sent by the event emitter / trigger by
+            // convention this is the value returned from the mutation
+            // resolver
+            const onMessage = (rootValue) => {
+                return Promise.resolve().then(() => {
+                    if (typeof contextValue === 'function') {
+                        return (<Function>contextValue)();
+                    }
+                    return contextValue;
+                }).then((curContext) => {
+                    return Promise.all([
+                        curContext,
+                        filter(rootValue, curContext),
+                    ]);
+                }).then(([curContext, doExecute]) => {
+                  if (!doExecute) {
+                    return;
                   }
-                  return contextValue;
-              }).then((curContext) => {
-                  return Promise.all([
+                  execute(
+                      schema,
+                      document,
+                      rootValue,
                       curContext,
-                      filter(rootValue, curContext),
-                  ]);
-              }).then(([curContext, doExecute]) => {
-                if (!doExecute) {
-                  return;
-                }
-                execute(
-                    schema,
-                    document,
-                    rootValue,
-                    curContext,
-                    variableValues,
-                    operationName
-                ).then( data => observer.next(data) );
-              }).catch((error) => {
-                  observer.error(error);
-                  observer.complete();
-              });
-          }
+                      variableValues,
+                      operationName
+                  ).then( data => observer.next(data) );
+                }).catch((error) => {
+                    observer.error(error);
+                    observer.complete();
+                });
+            }
 
-          // 3. subscribe and keep the subscription id
-          return this.pubsub.subscribe(triggerName, onMessage, channelOptions);
-      });
-
-      return () => {
-        // Unsubscribe all pubsubs.
-        return Promise.all(subscriptionPromises).then((subIds) => {
-          subIds.forEach((id) => this.pubsub.unsubscribe(id));
+            // 3. subscribe and keep the subscription id
+            return this.pubsub.subscribe(triggerName, onMessage, channelOptions);
         });
-      };
-    });
+
+        return {
+          unsubscribe: () => {
+            // Unsubscribe all pubsubs.
+            return Promise.all(subscriptionPromises).then((subIds) => {
+              subIds.forEach((id) => this.pubsub.unsubscribe(id));
+            });
+          },
+        };
+      },
+    };
   }
 
   protected handleStatic(
@@ -219,17 +224,19 @@ export class GraphQLExecutorWithSubscriptions {
     variableValues?: {[key: string]: any},
     operationName?: string,
   ): IObservable<ExecutionResult> {
-    return new Observable((observer) => {
-      Promise.resolve(undefined).then(() => execute(schema, document, rootValue, contextValue, variableValues, operationName))
-      .then((value) => {
-        observer.next(value);
-        observer.complete();
-      }, (e) => {
-        observer.error(e);
-        observer.complete();
-      });
+    return {
+        subscribe: (observer) => {
+          Promise.resolve(undefined).then(() => execute(schema, document, rootValue, contextValue, variableValues, operationName))
+          .then((value) => {
+            observer.next(value);
+            observer.complete();
+          }, (e) => {
+            observer.error(e);
+            observer.complete();
+          });
 
-      return () => {/* noop */};
-    });
+          return { unsubscribe: () => {/* noop */} };
+      },
+    };
   }
 }
