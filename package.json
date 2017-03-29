@@ -25,6 +25,7 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "devDependencies": {
+    "@types/graphql": "^0.8.6",
     "@types/mocha": "^2.2.39",
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",

@@ -13,7 +13,7 @@ GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with
 > This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
 
 
-### Example usage
+### Example usage with SubscriptionManager
 
 ```js
 import { PubSub, SubscriptionManager } from 'graphql-subscriptions';
@@ -28,11 +28,11 @@ const subscriptionManager = new SubscriptionManager({
 
   // setupFunctions maps from subscription name to a map of channel names and their filter functions
   // in this case it will subscribe to the commentAddedChannel and re-run the subscription query
-  // every time a new comment is posted whose repository name matches args.repoFullName.
+  // every time a new comment is posted whose repository name matches args.repoName.
   setupFunctions: {
     commentAdded: (options, args) => ({
       newCommentsChannel: {
-        filter: comment => comment.repository_name === args.repoFullName,
+        filter: comment => comment.repoFullName === args.repoName,
       },
     }),
   },
@@ -81,5 +81,75 @@ pubsub.publish('newCommentsChannel', {
 
 ```
 
+### Example usage with GraphQLExecutorWithSubscriptions
 
+```js
+import { PubSub, GraphQLExecutorWithSubscriptions } from 'graphql-subscriptions';
+import { parse } from 'graphql';
+import schema from './schema';
 
+// PubSub can be easily replaced, for example with https://github.com/davidyaha/graphql-redis-subscriptions
+const pubsub = new PubSub();
+
+const subscriptionExecutor = new GraphQLExecutorWithSubscriptions({
+  pubsub,
+
+  // setupFunctions maps from subscription name to a map of channel names and their filter functions
+  // in this case it will subscribe to the commentAddedChannel and re-run the subscription query
+  // every time a new comment is posted whose repository name matches args.repoName.
+  setupFunctions: {
+    commentAdded: (options, args) => ({
+      newCommentsChannel: {
+        filter: comment => comment.repository_name === args['repoName'],
+      },
+    }),
+  },
+});
+
+// start a subscription
+let result = subscriptionExecutor.executeReactive(
+  schema,
+  parse(`
+    subscription newComments($repoName: String!){
+      commentAdded(repoName: $repoName) { # <-- this is the subscription name
+        id
+        content
+        createdBy
+      }
+    }
+  `),
+  undefined, // rootValue
+  {}, // context
+  {
+    repoName: 'apollostack/GitHunt-API',
+  }, // variables
+  'newComments', // operationName
+);
+
+// subscribe for results
+result.subscribe({
+  next: (res) => console.log(res),
+  error: (e) => console.error('error :', e),
+  complete: () => console.log('complete'),
+});
+
+// publish to the channel
+pubsub.publish('newCommentsChannel', {
+  id: 123,
+  content: 'Test',
+  repository_name: 'apollostack/GitHunt-API',
+  createdBy: 'helfer',
+});
+
+// the query will run, and the callback will print
+// {
+//   data: {
+//     commentAdded: {
+//       id: 123,
+//       content: 'Test',
+//       createdBy: 'helfer',
+//     }
+//   }
+// }
+
+```

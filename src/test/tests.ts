@@ -11,14 +11,14 @@ import {
   GraphQLString,
   GraphQLInt,
   GraphQLBoolean,
+  ExecutionResult,
 } from 'graphql';
 
-import {
-    PubSub,
-    SubscriptionManager,
-} from '../pubsub';
+import { PubSub } from '../pubsub';
+import { SubscriptionManager } from '../SubscriptionManager';
 
 import { subscriptionHasSingleRootField } from '../validation';
+import { GraphQLExecutorWithSubscriptions } from '../GraphQLExecutorWithSubscriptions';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -31,7 +31,7 @@ describe('PubSub', function() {
     ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
       done();
-    }).then(() => {
+    }, undefined).then(() => {
       const succeed = ps.publish('a', 'test');
       expect(succeed).to.be.true;
     });
@@ -41,7 +41,7 @@ describe('PubSub', function() {
     const ps = new PubSub();
     ps.subscribe('a', payload => {
       assert(false);
-    }).then((subId) => {
+    }, undefined).then((subId) => {
       ps.unsubscribe(subId);
       const succeed = ps.publish('a', 'test');
       expect(succeed).to.be.true; // True because publish success is not
@@ -122,7 +122,6 @@ const schema = new GraphQLSchema({
 
 describe('SubscriptionManager', function() {
   let capturedArguments: Object;
-
   const pubsub = new PubSub();
 
   const subManager = new SubscriptionManager({
@@ -196,9 +195,14 @@ describe('SubscriptionManager', function() {
 
   it('rejects subscriptions with more than one root field', function() {
     const query = 'subscription X{ a: testSubscription, b: testSubscription }';
-    const callback = () => null;
-    return expect(subManager.subscribe({ query, operationName: 'X', callback }))
-      .to.eventually.be.rejectedWith('Subscription query has validation errors');
+    return new Promise((resolve, reject) => {
+      const callback = (e, v) => e ? reject(e) : resolve(v);
+      subManager.subscribe({ query, operationName: 'X', callback });
+    }).then((result: ExecutionResult) => {
+      expect(result.data).to.be.not.ok;
+      expect(result.errors).to.be.a('array');
+      expect(result.errors[0].message).to.be.equal('Subscription query has validation errors');
+    });
   });
 
   it('can subscribe with a valid query and gets a subId back', function() {
@@ -221,27 +225,34 @@ describe('SubscriptionManager', function() {
 
   it('can subscribe with a valid query and get the root value', function(done) {
     const query = 'subscription X{ testSubscription }';
+    let subscriptionId = undefined;
     const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
       try {
+        if (err) {
+          throw err;
+        }
+
         expect(payload.data.testSubscription).to.equals('good');
       } catch (e) {
-        done(e);
-        return;
+        return done(e);
       }
-      done();
+      return done();
     };
 
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.publish('testSubscription', 'good');
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('testSubscription', 'good');
+    }, done);
   });
 
   it('can use filter functions properly', function(done) {
     const query = `subscription Filter1($filterBoolean: Boolean){
        testFilter(filterBoolean: $filterBoolean)
       }`;
+    let subscriptionId = undefined;
     const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
       if (err) {
         done(err);
         return;
@@ -260,17 +271,20 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true},
       callback,
     }).then(subId => {
-      subManager.publish('Filter1', {filterBoolean: false });
-      subManager.publish('Filter1', {filterBoolean: true });
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('Filter1', {filterBoolean: false });
+      pubsub.publish('Filter1', {filterBoolean: true });
+    }, done);
   });
 
   it('can use a filter function that returns a promise', function(done) {
     const query = `subscription Filter2($filterBoolean: Boolean){
        testFilter(filterBoolean: $filterBoolean)
       }`;
+    let subscriptionId = undefined;
     const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
+
       if (err) {
         done(err);
         return;
@@ -289,10 +303,10 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true},
       callback,
     }).then(subId => {
-      subManager.publish('Filter2', {filterBoolean: false });
-      subManager.publish('Filter2', {filterBoolean: true });
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('Filter2', {filterBoolean: false });
+      pubsub.publish('Filter2', {filterBoolean: true });
+    }, done);
   });
 
   it('can subscribe to more than one trigger', function(done) {
@@ -300,6 +314,7 @@ describe('SubscriptionManager', function() {
     // args a and b can safely be removed.
     // TODO: write real tests for argument parsing
     let triggerCount = 0;
+    let subscriptionId = undefined;
     const query = `subscription multiTrigger($filterBoolean: Boolean, $uga: String){
        testFilterMulti(filterBoolean: $filterBoolean, a: $uga, b: 66)
       }`;
@@ -312,6 +327,7 @@ describe('SubscriptionManager', function() {
         return;
       }
       if (triggerCount === 2) {
+        subManager.unsubscribe(subscriptionId);
         done();
       }
     };
@@ -321,11 +337,11 @@ describe('SubscriptionManager', function() {
       variables: { filterBoolean: true, uga: 'UGA'},
       callback,
     }).then(subId => {
-      subManager.publish('NotATrigger', {filterBoolean: false});
-      subManager.publish('Trigger1', {filterBoolean: true });
-      subManager.publish('Trigger2', {filterBoolean: true });
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('NotATrigger', {filterBoolean: false});
+      pubsub.publish('Trigger1', {filterBoolean: true });
+      pubsub.publish('Trigger2', {filterBoolean: true });
+    }, done);
   });
 
   it('can subscribe to a trigger and pass options to PubSub using "channelOptions"', function(done) {
@@ -355,25 +371,29 @@ describe('SubscriptionManager', function() {
 
   it('can unsubscribe', function(done) {
     const query = 'subscription X{ testSubscription }';
+    let subscriptionId = undefined;
     const callback = (err, payload) => {
+      // will throw if called more then once.
       try {
-        assert(false);
+        subManager.unsubscribe(subscriptionId);
       } catch (e) {
-        done(e);
-        return;
+        return done(e);
       }
-      done();
+
+      // publish again after unsubscribe
+      pubsub.publish('testSubscription', 'bad');
+
+      setTimeout(done, 30);
     };
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.unsubscribe(subId);
-      subManager.publish('testSubscription', 'bad');
-      setTimeout(done, 30);
-    });
+      subscriptionId = subId;
+      pubsub.publish('testSubscription', 'bad');
+    }, done);
   });
 
   it('throws an error when trying to unsubscribe from unknown id', function () {
     expect(() => subManager.unsubscribe(123))
-      .to.throw('undefined');
+      .to.throw('is not a valid subscription id');
   });
 
   it('throws an error when trying to unsubscribe a second time', function () {
@@ -381,7 +401,7 @@ describe('SubscriptionManager', function() {
     return subManager.subscribe({ query, operationName: 'X', callback() { /* no publish */ } }).then(subId => {
       subManager.unsubscribe(subId);
       expect(() => subManager.unsubscribe(subId))
-        .to.throw('undefined');
+        .to.throw('is not a valid subscription id');
       });
   });
 
@@ -389,7 +409,9 @@ describe('SubscriptionManager', function() {
     const query = `subscription X($uga: Boolean!){
       testSubscription  @skip(if: $uga)
     }`;
+    let subscriptionId = undefined;
     const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(payload).to.be.undefined;
         expect(err.message).to.equals(
@@ -403,17 +425,23 @@ describe('SubscriptionManager', function() {
     };
 
     subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.publish('testSubscription', 'good');
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('testSubscription', 'good');
+    }, done);
   });
 
   it('calls context if it is a function', function(done) {
     const query = `subscription TestContext { testContext }`;
+    let subscriptionId = undefined;
     const callback = function(error, payload) {
-      expect(error).to.be.null;
-      expect(payload.data.testContext).to.eq('trigger');
-      done();
+      subManager.unsubscribe(subscriptionId);
+      try {
+        expect(error).to.be.null;
+        expect(payload.data.testContext).to.eq('trigger');
+      } catch (e) {
+        return done(e);
+      }
+      return done();
     };
     const context = function() {
       return 'trigger';
@@ -425,14 +453,16 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('contextTrigger', 'ignored');
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('contextTrigger', 'ignored');
+    }, done);
   });
 
   it('call the error callback if a context functions throws an error', function(done) {
     const query = `subscription TestContext { testContext }`;
+    let subscriptionId = undefined;
     const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(payload).to.be.undefined;
         expect(err.message).to.equals('context error');
@@ -452,16 +482,41 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('contextTrigger', 'ignored');
-      subManager.unsubscribe(subId);
-    });
+      subscriptionId = subId;
+      pubsub.publish('contextTrigger', 'ignored');
+    }, done);
+  });
+
+  it('runs the correct operation', function(done) {
+    const query = 'subscription S { testSubscription }\n\nquery Q { testString }';
+    let subscriptionId = undefined;
+    const callback = function(err, payload){
+      subManager.unsubscribe(subscriptionId);
+      try {
+        if (err) {
+          throw err;
+        }
+
+        expect(payload.data.testSubscription).to.equals('good');
+      } catch (e) {
+        return done(e);
+      }
+      return done();
+    };
+
+    subManager.subscribe({ query, operationName: 'S', callback }).then(subId => {
+      subscriptionId = subId;
+      pubsub.publish('testSubscription', 'good');
+    }, done);
   });
 
   it('passes arguments to setupFunction', function(done) {
     const query = `subscription TestArguments {
       testArguments(testArgument: 10)
     }`;
+    let subscriptionId = undefined;
     const callback = function(error, payload) {
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(error).to.be.null;
         expect(capturedArguments).to.eql({ testArgument: 10 });
@@ -477,8 +532,8 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('Trigger1', 'ignored');
-      subManager.unsubscribe(subId);
+      subscriptionId = subId;
+      pubsub.publish('Trigger1', 'ignored');
     });
   });
 
@@ -486,7 +541,9 @@ describe('SubscriptionManager', function() {
     const query = `subscription TestArguments {
       testArguments
     }`;
+    let subscriptionId = undefined;
     const callback = function(error, payload) {
+      subManager.unsubscribe(subscriptionId);
       try {
         expect(error).to.be.null;
         expect(capturedArguments).to.eql({ testArgument: 1234 });
@@ -502,11 +559,12 @@ describe('SubscriptionManager', function() {
       variables: {},
       callback,
     }).then(subId => {
-      subManager.publish('Trigger1', 'ignored');
-      subManager.unsubscribe(subId);
+      subscriptionId = subId;
+      pubsub.publish('Trigger1', 'ignored');
     });
   });
 });
+
 // ---------------------------------------------
 // validation tests ....
 
@@ -557,7 +615,6 @@ describe('SubscriptionValidationRule', function() {
     expect(errors.length).to.equals(0);
   });
 
-
   it('should not allow two fields in the subscription', function() {
     const sub = `subscription S3{
       test1
@@ -590,5 +647,64 @@ describe('SubscriptionValidationRule', function() {
     const errors = validate(validationSchema, parse(sub), [subscriptionHasSingleRootField]);
     expect(errors.length).to.equals(1);
     expect(errors[0].message).to.equals('Apollo subscriptions do not support fragments on the root field');
+  });
+});
+
+describe('GraphQLExecutorWithSubscriptions', function() {
+  const pubsub = new PubSub();
+  const executor = new GraphQLExecutorWithSubscriptions({
+    pubsub,
+    setupFunctions: {},
+  });
+
+  it('runs queries as well', () => {
+    return executor.execute(
+      schema,
+      parse(`query { testString }`),
+    ).then((result) => {
+      expect(result.data).to.be.a('object');
+      expect(result.data['testString']).to.be.equal('works');
+    });
+  });
+
+  it('rejects with bad variables', () => {
+    return executor.execute(
+      schema,
+      parse(`query { testString }`),
+      undefined,
+      undefined,
+      () => ({}), // should be an map
+    ).then((result) => {
+      assert(false);
+    }, (e) => {
+      expect(e.message).to.equal(
+        'Variables must be provided as an Object where each property is a variable value.' +
+        ' Perhaps look to see if an unparsed JSON string was provided.'
+      );
+    });
+  });
+
+  it('returns error on bad operation', () => {
+    return executor.execute(
+      schema,
+      parse(`query A { testString }`),
+      undefined,
+      undefined,
+      undefined,
+      'NoSuchOperation',
+    ).then((result) => {
+      expect(result.errors).to.be.a('array');
+      expect(result.errors[0].message).to.be.equal('could not parse operation on query');
+    });
+  });
+
+  it('returns error on bad query', () => {
+    return executor.execute(
+      schema,
+      parse(`query { does not exists }`),
+    ).then((result) => {
+      expect(result.errors).to.be.a('array');
+      expect(result.errors[0].message).to.be.equal('Subscription query has validation errors');
+    });
   });
 });
