@@ -1,7 +1,7 @@
 # Changelog
 
 ### vNEXT
-- ...
+- Transpiling index.js to target browsers using webpack. [PR #48](https://github.com/apollographql/graphql-subscriptions/pull/48)
 
 ### 0.3.1
 - Add support for `defaultValue`, fixes [#49](https://github.com/apollographql/graphql-subscriptions/issues/49) (https://github.com/apollographql/graphql-subscriptions/pull/50)
