@@ -77,7 +77,7 @@ subscriptionManager.subscribe({
 });
 
 // Publish a comment to the "newComments" channel, potentially triggering a call to a matching subscription.
-// For example, pubsub.publish() might be triggered inside a "createComment" mutation, after the post has
+// For example, pubsub.publish() might be triggered inside a "createComment" mutation, after the comment has
 // been created and added to the database.
 
 pubsub.publish('newComments', {
