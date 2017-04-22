@@ -8,7 +8,7 @@ GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with
 
 `npm install graphql-subscriptions`
 
-This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
+>This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
 
 ### Getting started
 
@@ -26,11 +26,11 @@ Create a new instance of SubscriptionManager and pass in your `schema` and `pubs
 
 The `setupFunctions` property is used to map subscription names (from your schema) to pubsub channel names. You can also provide filter functions to, for example, filter channel events based on query variables and the properties of the object published to the channel.
 
-Note: Typically, your `SubscriptionManager` will be passed to something like https://github.com/apollographql/subscriptions-transport-ws and its `SubscriptionServer`.
+>Note: Typically, your `SubscriptionManager` will be passed to a network transport like https://github.com/apollographql/subscriptions-transport-ws.
 
 ### Example usage
 
-Note: This example only demonstrates the `graphql-subscriptions` package. Take a look at [this article](https://dev-blog.apollodata.com/graphql-subscriptions-in-apollo-client-9a2457f015fb) for a more in-depth look at GraphQL subscriptions and how to use this package with `subscriptions-transport-ws` and a GraphQL client like Apollo.
+>This example only demonstrates the `graphql-subscriptions` package. Take a look at [this article](https://dev-blog.apollodata.com/graphql-subscriptions-in-apollo-client-9a2457f015fb) for a more in-depth look at using GraphQL subscriptions.
 
 ```js
 import { PubSub, SubscriptionManager } from 'graphql-subscriptions';
