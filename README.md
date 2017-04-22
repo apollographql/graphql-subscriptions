@@ -2,15 +2,13 @@
 
 # graphql-subscriptions
 
-GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
-
-> `graphql-subscriptions` is an extension for GraphQL, and you can use it with any GraphQL client and server (not only Apollo).
+GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. You can use it with any GraphQL client and server (not only Apollo).
 
 ### Installation
 
 `npm install graphql-subscriptions`
 
-> This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
+This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
 
 ### Getting started
 
@@ -47,6 +45,7 @@ const subscriptionManager = new SubscriptionManager({
   // In this example we map the "commentAdded" subscription to the "newComments" channel.
   // The  subscription is then called each time a new comment is posted where the
   // comment's `repoFullName` matches the `repoName` provided by the query.
+  
   setupFunctions: {
     commentAdded: (options, args) => ({
       newComments: {
@@ -56,7 +55,9 @@ const subscriptionManager = new SubscriptionManager({
   },
 });
 
-// Start a subscription. In normal usage you would do this client-side using something like subscriptions-transport-ws
+// Start a subscription. In normal usage you would do this client-side using something like
+// subscriptions-transport-ws.
+
 subscriptionManager.subscribe({
   query: `
     subscription newComments($repoName: String!){
@@ -76,9 +77,9 @@ subscriptionManager.subscribe({
   callback: (err, data) => console.log(data),
 });
 
-// Publish a comment to the "newComments" channel, potentially triggering a call to a matching subscription.
-// For example, pubsub.publish() might be triggered inside a "createComment" mutation, after the comment has
-// been created and added to the database.
+// Publish a comment to the "newComments" channel, potentially triggering a call to a matching
+// subscription. For example, pubsub.publish() might be triggered inside a "createComment" mutation,
+// after the comment has been created and added to the database.
 
 pubsub.publish('newComments', {
   id: 123,
