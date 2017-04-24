@@ -2,43 +2,62 @@
 
 # graphql-subscriptions
 
-GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
-
-> `graphql-subscriptions` is an extension for GraphQL, and you can use it with any GraphQL client and server (not only Apollo).
+GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. You can use it with any GraphQL client and server (not only Apollo).
 
 ### Installation
 
 `npm install graphql-subscriptions`
 
-> This package should be used with a network transport, for example [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
+>This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
 
+### Getting started
+
+The package exports `PubSub` and `SubscriptionManager`.
+
+#### PubSub
+
+`PubSub` is a simple pubsub implementation and is recommended only for use in development. It can be easily replaced with something like Redis and https://github.com/davidyaha/graphql-redis-subscriptions.
+
+You will then call `pubsub.publish('channelName', data)` to publish `data` to the `channelName` channel. This might happen inside a mutation resolver, for example.
+
+#### SubscriptionManager
+
+Create a new instance of SubscriptionManager and pass in your `schema` and `pubsub` instance. 
+
+The `setupFunctions` property is used to map subscription names (from your schema) to pubsub channel names. You can also provide filter functions to, for example, filter channel events based on query variables and the properties of the object published to the channel.
+
+>Note: Typically, your `SubscriptionManager` will be passed to a network transport like https://github.com/apollographql/subscriptions-transport-ws.
 
 ### Example usage
+
+>This example only demonstrates the `graphql-subscriptions` package. Take a look at [this article](https://dev-blog.apollodata.com/graphql-subscriptions-in-apollo-client-9a2457f015fb) for a more in-depth look at using GraphQL subscriptions.
 
 ```js
 import { PubSub, SubscriptionManager } from 'graphql-subscriptions';
 import schema from './schema';
 
-// PubSub can be easily replaced, for example with https://github.com/davidyaha/graphql-redis-subscriptions
 const pubsub = new PubSub();
 
 const subscriptionManager = new SubscriptionManager({
   schema,
   pubsub,
 
-  // setupFunctions maps from subscription name to a map of channel names and their filter functions
-  // in this case it will subscribe to the commentAddedChannel and re-run the subscription query
-  // every time a new comment is posted whose repository name matches args.repoFullName.
+  // In this example we map the "commentAdded" subscription to the "newComments" channel.
+  // The  subscription is then called each time a new comment is posted where the
+  // comment's `repoFullName` matches the `repoName` provided by the query.
+  
   setupFunctions: {
     commentAdded: (options, args) => ({
-      newCommentsChannel: {
-        filter: comment => comment.repository_name === args.repoFullName,
+      newComments: {
+        filter: comment => comment.repoFullName === args.repoName,
       },
     }),
   },
 });
 
-// start a subscription
+// Start a subscription. In normal usage you would do this client-side using something like
+// subscriptions-transport-ws.
+
 subscriptionManager.subscribe({
   query: `
     subscription newComments($repoName: String!){
@@ -58,12 +77,15 @@ subscriptionManager.subscribe({
   callback: (err, data) => console.log(data),
 });
 
-// publish to the channel
-pubsub.publish('newCommentsChannel', {
+// Publish a comment to the "newComments" channel, potentially triggering a call to a matching
+// subscription. For example, pubsub.publish() might be triggered inside a "createComment" mutation,
+// after the comment has been created and added to the database.
+
+pubsub.publish('newComments', {
   id: 123,
-  content: 'Test',
+  content: 'Hello world!',
   repoFullName: 'apollostack/GitHunt-API',
-  posted_by: 'helfer',
+  postedBy: 'helfer',
 });
 
 // the query will run, and the callback will print
