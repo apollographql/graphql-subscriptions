@@ -3,6 +3,9 @@
 ### vNEXT
 - ...
 
+### 0.3.1
+- Add support for `defaultValue`, fixes [#49](https://github.com/apollographql/graphql-subscriptions/issues/49) (https://github.com/apollographql/graphql-subscriptions/pull/50)
+
 ### 0.3.0
 - Allow `setupFunctions` to be async (return `Promise`) (https://github.com/apollographql/graphql-subscriptions/pull/41)
 - Refactor promise chaining in pubsub engine (https://github.com/apollographql/graphql-subscriptions/pull/41)
