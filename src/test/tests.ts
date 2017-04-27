@@ -2,6 +2,7 @@ import * as sinon from 'sinon';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinonChai from 'sinon-chai';
+import * as dirtyChai from 'dirty-chai';
 
 import {
   parse,
@@ -22,6 +23,7 @@ import { subscriptionHasSingleRootField } from '../validation';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
+chai.use(dirtyChai);
 const expect = chai.expect;
 const assert = chai.assert;
 
@@ -33,7 +35,7 @@ describe('PubSub', function() {
       done();
     }).then(() => {
       const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true;
+      expect(succeed).to.be.true();
     });
   });
 
@@ -44,7 +46,7 @@ describe('PubSub', function() {
     }).then((subId) => {
       ps.unsubscribe(subId);
       const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true; // True because publish success is not
+      expect(succeed).to.be.true(); // True because publish success is not
                                   // indicated by trigger having subscriptions
       done(); // works because pubsub is synchronous
     });
@@ -336,7 +338,7 @@ describe('SubscriptionManager', function() {
       operationName: 'X',
       callback: () => null,
     }).then(() => {
-      expect(pubsub.subscribe).to.have.been.calledOnce;
+      expect(pubsub.subscribe).to.have.been.calledOnce();
 
       const expectedChannelOptions = {
         foo: 'bar',
@@ -344,7 +346,7 @@ describe('SubscriptionManager', function() {
       expect(pubsub.subscribe).to.have.been.calledWith(
           sinon.match.string,
           sinon.match.func,
-          expectedChannelOptions
+          expectedChannelOptions,
       );
 
       done();
@@ -391,9 +393,9 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(err, payload){
       try {
-        expect(payload).to.be.undefined;
+        expect(payload).to.be.undefined();
         expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.'
+          'Variable "$uga" of required type "Boolean!" was not provided.',
         );
       } catch (e) {
         done(e);
@@ -411,7 +413,7 @@ describe('SubscriptionManager', function() {
   it('calls context if it is a function', function(done) {
     const query = `subscription TestContext { testContext }`;
     const callback = function(error, payload) {
-      expect(error).to.be.null;
+      expect(error).to.be.null();
       expect(payload.data.testContext).to.eq('trigger');
       done();
     };
@@ -434,7 +436,7 @@ describe('SubscriptionManager', function() {
     const query = `subscription TestContext { testContext }`;
     const callback = function(err, payload){
       try {
-        expect(payload).to.be.undefined;
+        expect(payload).to.be.undefined();
         expect(err.message).to.equals('context error');
       } catch (e) {
         done(e);
@@ -463,7 +465,7 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(error, payload) {
       try {
-        expect(error).to.be.null;
+        expect(error).to.be.null();
         expect(capturedArguments).to.eql({ testArgument: 10 });
         expect(payload.data.testArguments).to.equal('10');
         done();
@@ -488,7 +490,7 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(error, payload) {
       try {
-        expect(error).to.be.null;
+        expect(error).to.be.null();
         expect(capturedArguments).to.eql({ testArgument: 1234 });
         expect(payload.data.testArguments).to.equal('1234');
         done();
