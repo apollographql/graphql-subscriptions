@@ -30,7 +30,6 @@
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "dirty-chai": "^1.2.2",
     "graphql": "^0.9.3",
     "istanbul": "^1.0.0-alpha.2",
     "mocha": "^3.3.0",
@@ -40,7 +39,6 @@
     "tslint": "^5.1.0",
     "typescript": "^2.3.0"
   },
-  "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
   }
