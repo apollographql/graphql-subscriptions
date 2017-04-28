@@ -1,4 +1,5 @@
 [![npm version](https://badge.fury.io/js/graphql-subscriptions.svg)](https://badge.fury.io/js/graphql-subscriptions) [![GitHub license](https://img.shields.io/github/license/apollostack/graphql-subscriptions.svg)](https://github.com/apollostack/graphql-subscriptions/blob/license/LICENSE)
+[![Greenkeeper badge](https://badges.greenkeeper.io/apollographql/graphql-subscriptions.svg)](https://greenkeeper.io/)
 
 # graphql-subscriptions
 

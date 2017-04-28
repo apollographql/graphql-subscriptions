@@ -9,8 +9,8 @@ import {
     execute,
     parse,
     specifiedRules,
-    OperationDefinition,
-    Field,
+    OperationDefinitionNode,
+    FieldNode,
 } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -139,7 +139,7 @@ export class SubscriptionManager {
         parsedQuery.definitions.forEach( definition => {
             if (definition.kind === 'OperationDefinition'){
                 // only one root field is allowed on subscription. No fragments for now.
-                const rootField = (definition as OperationDefinition).selectionSet.selections[0] as Field;
+                const rootField = (definition as OperationDefinitionNode).selectionSet.selections[0] as FieldNode;
                 subscriptionName = rootField.name.value;
 
                 const fields = this.schema.getSubscriptionType().getFields();

@@ -1,3 +1,6 @@
+// chai style expect().to.be.true violates no-unused-expression
+/* tslint:disable:no-unused-expression */
+
 import * as sinon from 'sinon';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -344,7 +347,7 @@ describe('SubscriptionManager', function() {
       expect(pubsub.subscribe).to.have.been.calledWith(
           sinon.match.string,
           sinon.match.func,
-          expectedChannelOptions
+          expectedChannelOptions,
       );
 
       done();
@@ -393,7 +396,7 @@ describe('SubscriptionManager', function() {
       try {
         expect(payload).to.be.undefined;
         expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.'
+          'Variable "$uga" of required type "Boolean!" was not provided.',
         );
       } catch (e) {
         done(e);

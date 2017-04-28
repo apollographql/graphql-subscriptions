@@ -1,6 +1,6 @@
 import {
   ValidationContext,
-  Selection,
+  SelectionNode,
   GraphQLError,
 } from 'graphql';
 
@@ -21,7 +21,7 @@ export function subscriptionHasSingleRootField(context: ValidationContext): any 
     OperationDefinition(node) {
       const operationName = node.name ? node.name.value : '';
       let numFields = 0;
-      node.selectionSet.selections.forEach( (selection: Selection) => {
+      node.selectionSet.selections.forEach( (selection: SelectionNode) => {
         if (selection.kind === FIELD) {
           numFields++;
         } else {
