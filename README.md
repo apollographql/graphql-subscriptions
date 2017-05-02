@@ -16,7 +16,11 @@ The package exports `PubSub` and `SubscriptionManager`.
 
 #### PubSub
 
-`PubSub` is a simple pubsub implementation and is recommended only for use in development. It can be easily replaced with something like Redis and https://github.com/davidyaha/graphql-redis-subscriptions.
+`PubSub` is a simple pubsub implementation and is recommended only for use in development. It can be easily replaced with some other implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub.ts#L21-L25). There are a couple of them out there:
+- Use Redis with https://github.com/davidyaha/graphql-redis-subscriptions
+- Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
+- Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
+- [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You will then call `pubsub.publish('channelName', data)` to publish `data` to the `channelName` channel. This might happen inside a mutation resolver, for example.
 
