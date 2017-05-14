@@ -8,7 +8,10 @@
     "url": "https://github.com/apollostack/graphql-subscriptions.git"
   },
   "dependencies": {
-    "es6-promise": "^4.0.5"
+    "@types/graphql": "^0.9.1",
+    "es6-promise": "^4.0.5",
+    "graphql": "^0.9.6",
+    "iterall": "^1.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.7.0 || ^0.8.0 || ^0.9.0"
@@ -25,19 +28,17 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "devDependencies": {
-    "@types/graphql": "^0.9.0",
     "@types/mocha": "^2.2.39",
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "graphql": "^0.9.3",
     "istanbul": "^1.0.0-alpha.2",
     "mocha": "^3.3.0",
     "remap-istanbul": "^0.9.1",
     "sinon": "^2.1.0",
     "sinon-chai": "^2.9.0",
-    "tslint": "^5.1.0",
-    "typescript": "^2.3.0"
+    "tslint": "^5.2.0",
+    "typescript": "^2.3.2"
   },
   "typescript": {
     "definition": "dist/index.d.ts"

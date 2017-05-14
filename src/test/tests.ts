@@ -6,6 +6,14 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinonChai from 'sinon-chai';
 
+import { PubSub } from '../pubsub';
+import { isAsyncIterable } from 'iterall';
+
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
+const expect = chai.expect;
+const assert = chai.assert;
+
 import {
   parse,
   validate,
@@ -17,16 +25,10 @@ import {
 } from 'graphql';
 
 import {
-    PubSub,
-    SubscriptionManager,
-} from '../pubsub';
+  SubscriptionManager,
+} from '../subscriptions-manager';
 
 import { subscriptionHasSingleRootField } from '../validation';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
-const expect = chai.expect;
-const assert = chai.assert;
 
 describe('PubSub', function() {
   it('can subscribe and is called when events happen', function(done) {
@@ -54,6 +56,79 @@ describe('PubSub', function() {
   });
 });
 
+describe('AsyncIterator', () => {
+  it('should expose valid asyncItrator for a specific event', () => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+    expect(iterator).to.be.defined;
+    expect(isAsyncIterable(iterator)).to.be.true;
+  });
+
+  it('should trigger event on asyncIterator when published', done => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).to.be.defined;
+      expect(result.done).to.be.defined;
+      done();
+    });
+
+    ps.publish(evnetName, { test: true });
+  });
+
+  it('should not trigger event on asyncIterator when publishing other event', () => {
+    const evnetName = 'test2';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator('test');
+    const spy = sinon.spy();
+
+    iterator.next().then(spy);
+    ps.publish(evnetName, { test: true });
+    expect(spy).not.to.have.been.called;
+  });
+
+  it('register to multiple events', done => {
+    const evnetName = 'test2';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(['test', 'test2']);
+    const spy = sinon.spy();
+
+    iterator.next().then(() => {
+      spy();
+      expect(spy).to.have.been.called;
+      done();
+    });
+    ps.publish(evnetName, { test: true });
+  });
+
+  it('should not trigger event on asyncIterator already returned', done => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).to.be.defined;
+      expect(result.done).to.be.false;
+    });
+
+    ps.publish(evnetName, { test: true });
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).not.to.be.defined;
+      expect(result.done).to.be.true;
+      done();
+    });
+
+    iterator.return();
+    ps.publish(evnetName, { test: true });
+  });
+});
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'Query',
@@ -179,7 +254,7 @@ describe('SubscriptionManager', function() {
       },
     },
     pubsub,
-   });
+  });
 
   beforeEach(() => {
     capturedArguments = undefined;
@@ -194,7 +269,7 @@ describe('SubscriptionManager', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
     return expect(subManager.subscribe({ query, operationName: 'a', callback }))
-        .to.eventually.be.rejectedWith('Subscription query has validation errors');
+      .to.eventually.be.rejectedWith('Subscription query has validation errors');
   });
 
   it('rejects subscriptions with more than one root field', function() {
@@ -345,9 +420,9 @@ describe('SubscriptionManager', function() {
         foo: 'bar',
       };
       expect(pubsub.subscribe).to.have.been.calledWith(
-          sinon.match.string,
-          sinon.match.func,
-          expectedChannelOptions,
+        sinon.match.string,
+        sinon.match.func,
+        expectedChannelOptions,
       );
 
       done();
@@ -385,7 +460,7 @@ describe('SubscriptionManager', function() {
       subManager.unsubscribe(subId);
       expect(() => subManager.unsubscribe(subId))
         .to.throw('undefined');
-      });
+    });
   });
 
   it('calls the error callback if there is an execution error', function(done) {
