@@ -8,7 +8,9 @@
     "url": "https://github.com/apollostack/graphql-subscriptions.git"
   },
   "dependencies": {
+    "@types/graphql": "^0.9.1",
     "es6-promise": "^4.0.5",
+    "graphql": "^0.9.6",
     "iterall": "^1.1.1"
   },
   "peerDependencies": {
