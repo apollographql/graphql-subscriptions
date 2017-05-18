@@ -56,7 +56,9 @@ export interface SetupFunctions {
   [subscriptionName: string]: SetupFunction;
 }
 
-// This manages actual GraphQL subscriptions.
+/**
+ * @deprecated
+ */
 export class SubscriptionManager {
   private pubsub: PubSubEngine;
   private schema: GraphQLSchema;

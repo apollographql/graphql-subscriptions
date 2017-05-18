@@ -1,7 +1,9 @@
 # Changelog
 
 ### vNEXT
-- ...
+- Added `asyncIterator(channelName: string)` to `PubSub` implementation [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
+- Added `withFilter` to allow `AsyncIterator` filtering [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
+- Deprecate `SubscriptionManager` [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
 
 ### 0.3.1
 - Add support for `defaultValue`, fixes [#49](https://github.com/apollographql/graphql-subscriptions/issues/49) (https://github.com/apollographql/graphql-subscriptions/pull/50)
