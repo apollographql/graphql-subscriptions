@@ -102,6 +102,7 @@ export const resolvers = {
 
 You can map multiple channels into the same subscription, for example when there are multiple events that trigger the same subscription in the GraphQL engine.
 
+```js
 const SOMETHING_UPDATED = 'something_updated';
 const SOMETHING_CREATED = 'something_created';
 const SOMETHING_REMOVED = 'something_removed';
@@ -113,8 +114,9 @@ export const resolvers = {
     },
   },
 }
+````
 
-### Custom Wrappers
+### Custom `AsyncIterator` Wrappers
 
 The value you should return from your `subscribe` resolver must be an `AsyncIterator`.
 
