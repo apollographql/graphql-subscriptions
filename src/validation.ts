@@ -7,13 +7,18 @@ import {
 // XXX I don't know how else to do this. Can't seem to import from GraphQL.
 const FIELD = 'Field';
 
-
+/**
+ * @deprecated
+ */
 export function tooManySubscriptionFieldsError(subscriptionName: string): string {
   return `Subscription "${subscriptionName}" must have only one field.`;
 }
 
 // XXX we temporarily use this validation rule to make our life a bit easier.
 
+/**
+ * @deprecated
+ */
 export function subscriptionHasSingleRootField(context: ValidationContext): any {
   const schema = context.getSchema();
   schema.getSubscriptionType();

@@ -2,110 +2,179 @@
 
 # graphql-subscriptions
 
-GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. You can use it with any GraphQL client and server (not only Apollo).
+GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. 
+
+You can use it with any GraphQL client and server (not only Apollo).
 
 ### Installation
 
-`npm install graphql-subscriptions`
+`npm install graphql-subscriptions` or `yarn add graphql-subscriptions`
 
->This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
+> This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
 
-### Getting started
+### Getting started with your first subscritpion
 
-The package exports `PubSub` and `SubscriptionManager`.
+To begin with GraphQL subscriptions, start by defining a GraphQL `Subscription` type in your schema:
 
-#### PubSub
+```graphql
+type Subscription {
+    somethingChanged: Result
+}
 
-`PubSub` is a simple pubsub implementation and is recommended only for use in development. It can be easily replaced with some other implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub.ts#L21-L25). There are a couple of them out there:
+type Result {
+    id: String
+}
+```
+
+Next, add the `Subscription` type to your `schema` definition:
+
+```graphql
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+```
+
+Now, let's create a simple `PubSub` instance - it is a simple pubsub implementation, based on `EventEmitter`. 
+
+To create a simple `PubSub` instance, do the following:
+
+```js
+import { PubSub } from 'graphql-subscriptions';
+
+export const pubsub = new PubSub();
+```
+
+Now, implement your Subscriptions type resolver, using the `pubsub.asyncIterator` to map the event you need:
+
+```js
+const SOMETHING_CHANGED_TOPIC = 'something_changed';
+
+export const resolvers = {
+  Subscription: {
+    somethingChanged: {
+      subscribe: () => pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC),
+    },
+  },
+}
+```
+
+> Subscriptions resolvers are not a function, but an object with `subscribe` method, than returns `AsyncIterable`.
+
+Now, GraphQL engine knows that `somethingChanged` is a subscription, and every time we will use `pubsub.publish` over this topic - is will publish it using the transport we use:
+
+```js
+pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
+```
+
+### Filters
+
+When publishing data to subscribers, we need to make sure that each subscribers get only the data it need.
+
+To do so, we can use `withFilter` helper from this package, which wraps `AsyncItrator` with a filter function, and let you control each publication for each user.
+
+`withFilter` API:
+- `asyncIterator: AsyncIterator<any>` : Async iterator you got from your `pubsub.asyncIterator`.
+- `filterFn: (payload, variables, context, info) => boolean | Promise<boolean>` - A filter function, executed with the payload (the published value), variables, context and operation info, must return `boolean` or `Promise<boolean>` indicating if the payload should pass to the subscriber.
+
+For example, if `somethingChanged` would also accept a variable with the ID that is relevant, we can use the following code to filter according to it: 
+
+```js
+import { withFilter } from 'graphql-subscriptions';
+
+const SOMETHING_CHANGED_TOPIC = 'something_changed';
+
+export const resolvers = {
+  Subscription: {
+    somethingChanged: {
+      subscribe: withFilter(pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC), (payload, variables) => {
+        return payload.somethingChanged.id === variables.relevantId;
+      }),
+    },
+  },
+}
+```
+
+> Note that when using `withFilter`, you don't need to wrap your return value with a function.
+
+### Channels Mapping
+
+You can map multiple channels into the same subscription, for example when there are multiple events that trigger the same subscription in the GraphQL engine.
+
+```js
+const SOMETHING_UPDATED = 'something_updated';
+const SOMETHING_CREATED = 'something_created';
+const SOMETHING_REMOVED = 'something_removed';
+
+export const resolvers = {
+  Subscription: {
+    somethingChanged: {
+      subscribe: () => pubsub.asyncIterator([ SOMETHING_UPDATED, SOMETHING_CREATED, SOMETHING_REMOVED ]),
+    },
+  },
+}
+````
+
+### Custom `AsyncIterator` Wrappers
+
+The value you should return from your `subscribe` resolver must be an `AsyncIterator`.
+
+You can use this value and wrap it with another `AsyncIterator` to implement custom logic over your subscriptions.
+
+For example, the following implementation manipulate the payload by adding some static fields:
+
+```typescript
+import { $$asyncIterator } from 'iterall';
+
+export const withStaticFields = (asyncIterator: AsyncIterator<any>, staticFields: Object): Function => {
+  return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
+    
+    return {
+      next() {
+        return asyncIterator.next().then(({ value, done }) => {
+          return {
+            value: {
+              ...value,
+              ...staticFields,
+            },
+            done,
+          };
+        });
+      },
+      return() {
+        return Promise.resolve({ value: undefined, done: true });
+      },
+      throw(error) {
+        return Promise.reject(error);
+      },
+      [$$asyncIterator]() {
+        return this;
+      },
+    };
+  };
+};
+```
+
+> You can also take a look at `withFilter` for inspiration.
+
+For more information about `AsyncIterator`:
+- [TC39 Proposal](https://github.com/tc39/proposal-async-iteration)
+- [iterall](https://github.com/leebyron/iterall)
+- [IxJS](https://github.com/ReactiveX/IxJS)
+
+### PubSub Implementations
+
+It can be easily replaced with some other implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub.ts#L21-L25). There are a couple of them out there:
 - Use Redis with https://github.com/davidyaha/graphql-redis-subscriptions
 - Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
-You will then call `pubsub.publish('channelName', data)` to publish `data` to the `channelName` channel. This might happen inside a mutation resolver, for example.
+You can also implement a `PubSub` of your own, by using the exported interface `PubSubEngine` from this package.
 
-#### SubscriptionManager
+#### SubscriptionManager **@deprecated**
 
-Create a new instance of SubscriptionManager and pass in your `schema` and `pubsub` instance. 
+`SubscriptionManager` is the previous alternative for using `graphql-js` subscriptions directly, and it's now deprecated.
 
-The `setupFunctions` property is used to map subscription names (from your schema) to pubsub channel names. You can also provide filter functions to, for example, filter channel events based on query variables and the properties of the object published to the channel.
-
->Note: Typically, your `SubscriptionManager` will be passed to a network transport like https://github.com/apollographql/subscriptions-transport-ws.
-
-### Example usage
-
->This example only demonstrates the `graphql-subscriptions` package. Take a look at [this article](https://dev-blog.apollodata.com/graphql-subscriptions-in-apollo-client-9a2457f015fb) for a more in-depth look at using GraphQL subscriptions.
-
-```js
-import { PubSub, SubscriptionManager } from 'graphql-subscriptions';
-import schema from './schema';
-
-const pubsub = new PubSub();
-
-const subscriptionManager = new SubscriptionManager({
-  schema,
-  pubsub,
-
-  // In this example we map the "commentAdded" subscription to the "newComments" channel.
-  // The  subscription is then called each time a new comment is posted where the
-  // comment's `repoFullName` matches the `repoName` provided by the query.
-  
-  setupFunctions: {
-    commentAdded: (options, args) => ({
-      newComments: {
-        filter: comment => comment.repoFullName === args.repoName,
-      },
-    }),
-  },
-});
-
-// Start a subscription. In normal usage you would do this client-side using something like
-// subscriptions-transport-ws.
-
-subscriptionManager.subscribe({
-  query: `
-    subscription newComments($repoName: String!){
-      commentAdded(repoName: $repoName) { # <-- this is the subscription name
-        id
-        content
-        createdBy {
-          username
-        }
-      }
-    }
-  `,
-  variables: {
-    repoName: 'apollostack/GitHunt-API',
-  },
-  context: {},
-  callback: (err, data) => console.log(data),
-});
-
-// Publish a comment to the "newComments" channel, potentially triggering a call to a matching
-// subscription. For example, pubsub.publish() might be triggered inside a "createComment" mutation,
-// after the comment has been created and added to the database.
-
-pubsub.publish('newComments', {
-  id: 123,
-  content: 'Hello world!',
-  repoFullName: 'apollostack/GitHunt-API',
-  postedBy: 'helfer',
-});
-
-// the query will run, and the callback will print
-// {
-//   data: {
-//     commentAdded: {
-//       id: 123,
-//       content: 'Test',
-//       createdBy: {
-//         username: 'helfer',
-//       }
-//     }
-//   }
-// }
-
-```
-
-
-
+If you are looking for it's API docs, refer to [a previous commit of the repository](https://github.com/apollographql/graphql-subscriptions/blob/5eaee92cd50060b3f3637f00c53960f51a07d0b2/README.md)
