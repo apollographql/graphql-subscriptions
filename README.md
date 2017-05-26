@@ -116,6 +116,27 @@ export const resolvers = {
 }
 ````
 
+### Payload Manipulation
+
+You can also manipulate the published payload, by adding `resovle` methods to your subscription:
+
+```js
+const SOMETHING_UPDATED = 'something_updated';
+
+export const resolvers = {
+  Subscription: { 
+    somethingChanged: {
+      resolve: (payload, args, context, info) => {
+        // Manipulate and return the new value
+        
+        return payload;
+      },
+      subscribe: () => pubsub.asyncIterator(SOMETHING_UPDATED),
+    },
+  },
+}
+````
+
 ### Custom `AsyncIterator` Wrappers
 
 The value you should return from your `subscribe` resolver must be an `AsyncIterator`.

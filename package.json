@@ -1,6 +1,6 @@
 {
   "name": "graphql-subscriptions",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
   "repository": {
@@ -10,11 +10,10 @@
   "dependencies": {
     "@types/graphql": "^0.9.1",
     "es6-promise": "^4.0.5",
-    "graphql": "^0.9.6",
     "iterall": "^1.1.1"
   },
   "peerDependencies": {
-    "graphql": "^0.7.0 || ^0.8.0 || ^0.9.0"
+    "graphql": "^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0"
   },
   "scripts": {
     "compile": "tsc",
@@ -32,6 +31,7 @@
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "graphql": "^0.10.0",
     "istanbul": "^1.0.0-alpha.2",
     "mocha": "^3.3.0",
     "remap-istanbul": "^0.9.1",
