@@ -1,6 +1,6 @@
 {
   "name": "graphql-subscriptions",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
   "repository": {
@@ -40,6 +40,7 @@
     "tslint": "^5.2.0",
     "typescript": "^2.3.2"
   },
+  "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
   }
