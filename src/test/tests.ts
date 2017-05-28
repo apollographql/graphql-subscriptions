@@ -469,10 +469,7 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(err, payload){
       try {
-        expect(payload).to.be.undefined;
-        expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.',
-        );
+        expect(payload).to.be.defined;
       } catch (e) {
         done(e);
         return;

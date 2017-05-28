@@ -3,8 +3,10 @@ import { $$asyncIterator } from 'iterall';
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean;
 export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any) => AsyncIterator<any>;
 
-export const withFilter = (asyncIterator: AsyncIterator<any>, filterFn: FilterFn): Function => {
+export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: FilterFn): Function => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
+    const asyncIterator = asyncIteratorFn();
+
     const getNextPromise = () => {
       return asyncIterator
         .next()
