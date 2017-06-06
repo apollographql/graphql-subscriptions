@@ -118,7 +118,7 @@ export const resolvers = {
 
 ### Payload Manipulation
 
-You can also manipulate the published payload, by adding `resovle` methods to your subscription:
+You can also manipulate the published payload, by adding `resolve` methods to your subscription:
 
 ```js
 const SOMETHING_UPDATED = 'something_updated';
