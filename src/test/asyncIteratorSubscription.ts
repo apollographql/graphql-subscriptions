@@ -2,6 +2,7 @@
 /* tslint:disable:no-unused-expression */
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { spy } from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
 import { isAsyncIterable } from 'iterall';
@@ -23,10 +24,8 @@ import { subscribe } from 'graphql/subscription';
 
 const FIRST_EVENT = 'FIRST_EVENT';
 
-function prepare() {
-  const pubsub = new PubSub();
-
-  const schema = new GraphQLSchema({
+function buildSchema(iterator) {
+  return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
       fields: {
@@ -44,7 +43,7 @@ function prepare() {
         testSubscription: {
           type: GraphQLString,
           subscribe: withFilter(
-            () => pubsub.asyncIterator(FIRST_EVENT),
+            () => iterator,
             () => true,
           ),
           resolve: root => {
@@ -54,9 +53,8 @@ function prepare() {
       },
     }),
   });
-
-  return { pubsub, schema };
 }
+
 
 describe('GraphQL-JS asyncIterator', () => {
   it('should allow subscriptions', () => {
@@ -66,7 +64,9 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
 
-    const { schema, pubsub } = prepare();
+    const pubsub = new PubSub();
+    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const schema = buildSchema(origIterator);
 
     const results = subscribe(schema, query);
     const payload1 = results.next();
@@ -89,15 +89,16 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
 
-    const { schema, pubsub } = prepare();
+    const pubsub = new PubSub();
+    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const returnSpy = spy(origIterator, 'return');
+    const schema = buildSchema(origIterator);
 
     const results = subscribe(schema, query);
     const end = results.return();
 
     const r = end.then(res => {
-      // TypeScript trick to access private properties
-      const eventHandlers = (<any>pubsub).ee._events;
-      expect(eventHandlers[FIRST_EVENT]).to.be.undefined;
+      expect(returnSpy).to.have.been.called;
     });
 
     pubsub.publish(FIRST_EVENT, {});
