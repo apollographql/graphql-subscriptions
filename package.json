@@ -22,7 +22,7 @@
     "posttest": "npm run lint",
     "lint": "tslint --type-check --project ./tsconfig.json ./src/**/*.ts",
     "watch": "tsc -w",
-    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js",
+    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js ",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
