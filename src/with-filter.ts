@@ -29,10 +29,10 @@ export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: 
         return getNextPromise();
       },
       return() {
-        return Promise.resolve({ value: undefined, done: true });
+        return asyncIterator.return();
       },
       throw(error) {
-        return Promise.reject(error);
+        return asyncIterator.throw(error);
       },
       [$$asyncIterator]() {
         return this;
