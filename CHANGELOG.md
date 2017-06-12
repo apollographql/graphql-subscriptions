@@ -3,6 +3,15 @@
 ### vNEXT
 - ...
 
+### 0.4.3
+- Properly propagate return() and throw() through withFilter [PR #74](https://github.com/apollographql/graphql-subscriptions/pull/74)
+
+### 0.4.2
+- Fixed issue with `withFilter` causing to use the same iterator [PR #69](https://github.com/apollographql/graphql-subscriptions/pull/69)
+
+### 0.4.1
+- Fixed exports issue with TypeScript [PR #65](https://github.com/apollographql/graphql-subscriptions/pull/65)
+
 ### 0.4.0
 - Added `asyncIterator(channelName: string)` to `PubSub` implementation [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
 - Added `withFilter` to allow `AsyncIterator` filtering [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
