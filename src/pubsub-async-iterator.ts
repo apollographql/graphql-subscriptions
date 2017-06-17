@@ -32,7 +32,7 @@ import {PubSubEngine} from './pubsub-engine';
 export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
 
   private pullQueue: ((value?: any) => Promise<IteratorResult<T>>)[];
-  private pushQueue: any[];
+  private pushQueue: T[];
   private eventsArray: string[];
   private allSubscribed: Promise<number[]>;
   private listening: boolean;
@@ -66,7 +66,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return this;
   }
 
-  private async pushValue(event) {
+  private async pushValue(event: T) {
     await this.allSubscribed;
     if (this.pullQueue.length !== 0) {
       this.pullQueue.shift()({ value: event, done: false });
