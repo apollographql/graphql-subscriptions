@@ -1,17 +1,17 @@
 import { EventEmitter } from 'events';
 import { PubSubEngine } from './pubsub-engine';
-import { eventEmitterAsyncIterator } from './event-emitter-to-async-iterator';
 
 export interface PubSubOptions {
   eventEmitter?: EventEmitter;
 }
 
-export class PubSub implements PubSubEngine {
+export class PubSub extends PubSubEngine {
   protected ee: EventEmitter;
   private subscriptions: { [key: string]: [string, (...args: any[]) => void] };
   private subIdCounter: number;
 
   constructor(options: PubSubOptions = {}) {
+    super();
     this.ee = options.eventEmitter || new EventEmitter();
     this.subscriptions = {};
     this.subIdCounter = 0;
@@ -34,9 +34,5 @@ export class PubSub implements PubSubEngine {
     const [triggerName, onMessage] = this.subscriptions[subId];
     delete this.subscriptions[subId];
     this.ee.removeListener(triggerName, onMessage);
-  }
-
-  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return eventEmitterAsyncIterator<T>(this.ee, triggers);
   }
 }
