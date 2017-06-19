@@ -5,7 +5,7 @@ export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any
 
 export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: FilterFn): Function => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
-    const asyncIterator = asyncIteratorFn();
+    const asyncIterator = asyncIteratorFn(rootValue, args, context, info);
 
     const getNextPromise = () => {
       return asyncIterator
