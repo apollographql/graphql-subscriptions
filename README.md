@@ -12,7 +12,7 @@ You can use it with any GraphQL client and server (not only Apollo).
 
 > This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
 
-### Getting started with your first subscritpion
+### Getting started with your first subscription
 
 To begin with GraphQL subscriptions, start by defining a GraphQL `Subscription` type in your schema:
 
