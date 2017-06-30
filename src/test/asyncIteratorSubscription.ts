@@ -24,7 +24,9 @@ import { subscribe } from 'graphql/subscription';
 
 const FIRST_EVENT = 'FIRST_EVENT';
 
-function buildSchema(iterator) {
+const defaultFilter = (payload) => true;
+
+function buildSchema(iterator, filterFn = defaultFilter) {
   return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
@@ -42,10 +44,7 @@ function buildSchema(iterator) {
       fields: {
         testSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(
-            () => iterator,
-            () => true,
-          ),
+          subscribe: withFilter(() => iterator, filterFn),
           resolve: root => {
             return 'FIRST_EVENT';
           },
@@ -55,18 +54,18 @@ function buildSchema(iterator) {
   });
 }
 
-
 describe('GraphQL-JS asyncIterator', () => {
   it('should allow subscriptions', () => {
     const query = parse(`
       subscription S1 {
+
         testSubscription
       }
     `);
-
     const pubsub = new PubSub();
     const origIterator = pubsub.asyncIterator(FIRST_EVENT);
     const schema = buildSchema(origIterator);
+
 
     const results = subscribe(schema, query);
     const payload1 = results.next();
@@ -80,6 +79,46 @@ describe('GraphQL-JS asyncIterator', () => {
     pubsub.publish(FIRST_EVENT, {});
 
     return r;
+  });
+
+  it('should detect when the payload is done when filtering', (done) => {
+    const query = parse(`
+      subscription S1 {
+        testSubscription
+      }
+    `);
+
+    const pubsub = new PubSub();
+    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+
+    let counter = 0;
+
+    const filterFn = () => {
+      counter++;
+
+      if (counter > 10) {
+        const e = new Error('Infinite loop detected');
+        done(e);
+        throw e;
+      }
+
+      return false;
+    };
+
+    const schema = buildSchema(origIterator, filterFn);
+
+    const results = subscribe(schema, query);
+    expect(isAsyncIterable(results)).to.be.true;
+
+    results.next();
+    results.return();
+
+    pubsub.publish(FIRST_EVENT, {});
+
+    setTimeout(_ => {
+      done();
+    }, 500);
+
   });
 
   it('should clear event handlers', () => {
