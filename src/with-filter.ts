@@ -15,7 +15,7 @@ export const withFilter = (asyncIteratorFn: () => AsyncIterator<any>, filterFn: 
           Promise.resolve(filterFn(payload.value, args, context, info)).catch(() => false),
         ]))
         .then(([payload, filterResult]) => {
-          if (filterResult === true) {
+          if (filterResult === true || payload.done === true) {
             return payload;
           }
 
