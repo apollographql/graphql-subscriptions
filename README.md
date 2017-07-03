@@ -72,7 +72,7 @@ pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
 
 When publishing data to subscribers, we need to make sure that each subscribers get only the data it need.
 
-To do so, we can use `withFilter` helper from this package, which wraps `AsyncItrator` with a filter function, and let you control each publication for each user.
+To do so, we can use `withFilter` helper from this package, which wraps `AsyncIterator` with a filter function, and let you control each publication for each user.
 
 `withFilter` API:
 - `asyncIteratorFn: () => AsyncIterator<any>` : A function that returns `AsyncIterator` you got from your `pubsub.asyncIterator`.
