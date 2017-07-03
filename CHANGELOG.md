@@ -1,7 +1,9 @@
 # Changelog
 
 ### vNEXT
-- ...
+
+### 0.4.4
+- Avoid infinite loop after the last consumer unsubscribes, [Issue #81](https://github.com/apollographql/graphql-subscriptions/issues/81) [PR #84](https://github.com/apollographql/graphql-subscriptions/pull/84)
 
 ### 0.4.3
 - Properly propagate return() and throw() through withFilter [PR #74](https://github.com/apollographql/graphql-subscriptions/pull/74)
