@@ -2,6 +2,36 @@
 
 ### vNEXT
 
+### 0.4.4
+- Avoid infinite loop after the last consumer unsubscribes, [Issue #81](https://github.com/apollographql/graphql-subscriptions/issues/81) [PR #84](https://github.com/apollographql/graphql-subscriptions/pull/84)
+
+### 0.4.3
+- Properly propagate return() and throw() through withFilter [PR #74](https://github.com/apollographql/graphql-subscriptions/pull/74)
+
+### 0.4.2
+- Fixed issue with `withFilter` causing to use the same iterator [PR #69](https://github.com/apollographql/graphql-subscriptions/pull/69)
+
+### 0.4.1
+- Fixed exports issue with TypeScript [PR #65](https://github.com/apollographql/graphql-subscriptions/pull/65)
+
+### 0.4.0
+- Added `asyncIterator(channelName: string)` to `PubSub` implementation [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
+- Added `withFilter` to allow `AsyncIterator` filtering [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
+- Deprecate `SubscriptionManager` [PR #60](https://github.com/apollographql/graphql-subscriptions/pull/60)
+- Fixed `withFilter` issue caused multiple subscribers to execute with the same AsyncIterator [PR #69](https://github.com/apollographql/graphql-subscriptions/pull/69)
+
+### 0.3.1
+- Add support for `defaultValue`, fixes [#49](https://github.com/apollographql/graphql-subscriptions/issues/49) (https://github.com/apollographql/graphql-subscriptions/pull/50)
+
+### 0.3.0
+- Allow `setupFunctions` to be async (return `Promise`) (https://github.com/apollographql/graphql-subscriptions/pull/41)
+- Refactor promise chaining in pubsub engine (https://github.com/apollographql/graphql-subscriptions/pull/41)
+- Fixed a possible bug with managing subscriptions internally (https://github.com/apollographql/graphql-subscriptions/pull/29)
+- Return the `Promise` from `onMessage` of PubSub engine (https://github.com/apollographql/graphql-subscriptions/pull/33)
+
+### 0.2.3
+- update `graphql` dependency to 0.9.0
+
 ### 0.2.2
 - made `graphql` a peer dependency and updated it to 0.8.2
 

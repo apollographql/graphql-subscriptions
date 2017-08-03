@@ -4,13 +4,15 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
+    "lib": ["es6", "dom", "esnext"],
     "noImplicitAny": false,
     "rootDir": "./src",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true,
-    "declaration": true
+    "declaration": true,
+    "typeRoots": ["node_modules/@types"]
   },
   "exclude": [
     "node_modules",

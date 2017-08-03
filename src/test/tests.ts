@@ -1,7 +1,18 @@
+// chai style expect().to.be.true violates no-unused-expression
+/* tslint:disable:no-unused-expression */
+
 import * as sinon from 'sinon';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinonChai from 'sinon-chai';
+
+import { PubSub } from '../pubsub';
+import { isAsyncIterable } from 'iterall';
+
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
+const expect = chai.expect;
+const assert = chai.assert;
 
 import {
   parse,
@@ -14,16 +25,10 @@ import {
 } from 'graphql';
 
 import {
-    PubSub,
-    SubscriptionManager,
-} from '../pubsub';
+  SubscriptionManager,
+} from '../subscriptions-manager';
 
 import { subscriptionHasSingleRootField } from '../validation';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
-const expect = chai.expect;
-const assert = chai.assert;
 
 describe('PubSub', function() {
   it('can subscribe and is called when events happen', function(done) {
@@ -51,6 +56,79 @@ describe('PubSub', function() {
   });
 });
 
+describe('AsyncIterator', () => {
+  it('should expose valid asyncItrator for a specific event', () => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+    expect(iterator).to.be.defined;
+    expect(isAsyncIterable(iterator)).to.be.true;
+  });
+
+  it('should trigger event on asyncIterator when published', done => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).to.be.defined;
+      expect(result.done).to.be.defined;
+      done();
+    });
+
+    ps.publish(evnetName, { test: true });
+  });
+
+  it('should not trigger event on asyncIterator when publishing other event', () => {
+    const evnetName = 'test2';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator('test');
+    const spy = sinon.spy();
+
+    iterator.next().then(spy);
+    ps.publish(evnetName, { test: true });
+    expect(spy).not.to.have.been.called;
+  });
+
+  it('register to multiple events', done => {
+    const evnetName = 'test2';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(['test', 'test2']);
+    const spy = sinon.spy();
+
+    iterator.next().then(() => {
+      spy();
+      expect(spy).to.have.been.called;
+      done();
+    });
+    ps.publish(evnetName, { test: true });
+  });
+
+  it('should not trigger event on asyncIterator already returned', done => {
+    const evnetName = 'test';
+    const ps = new PubSub();
+    const iterator = ps.asyncIterator(evnetName);
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).to.be.defined;
+      expect(result.done).to.be.false;
+    });
+
+    ps.publish(evnetName, { test: true });
+
+    iterator.next().then(result => {
+      expect(result).to.be.defined;
+      expect(result.value).not.to.be.defined;
+      expect(result.done).to.be.true;
+      done();
+    });
+
+    iterator.return();
+    ps.publish(evnetName, { test: true });
+  });
+});
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'Query',
@@ -104,11 +182,25 @@ const schema = new GraphQLSchema({
           return root;
         },
       },
+      testArguments: {
+        type: GraphQLString,
+        resolve: (root, { testArgument }) => {
+          return String(testArgument);
+        },
+        args: {
+          testArgument: {
+            type: GraphQLInt,
+            defaultValue: 1234,
+          },
+        },
+      },
     },
   }),
 });
 
 describe('SubscriptionManager', function() {
+  let capturedArguments: Object;
+
   const pubsub = new PubSub();
 
   const subManager = new SubscriptionManager({
@@ -118,6 +210,13 @@ describe('SubscriptionManager', function() {
         return {
           'Filter1': {
             filter: (root) => root.filterBoolean === filterBoolean,
+          },
+          Filter2: {
+            filter: (root) => {
+              return new Promise((resolve) => {
+                setTimeout(() => resolve(root.filterBoolean === filterBoolean), 10);
+              });
+            },
           },
         };
       },
@@ -147,11 +246,18 @@ describe('SubscriptionManager', function() {
           },
         };
       },
+      testArguments(opts, args) {
+        capturedArguments = args;
+        return {
+          Trigger1: {},
+        };
+      },
     },
     pubsub,
-   });
+  });
 
   beforeEach(() => {
+    capturedArguments = undefined;
     sinon.spy(pubsub, 'subscribe');
   });
 
@@ -163,7 +269,7 @@ describe('SubscriptionManager', function() {
     const query = 'query a{ testInt }';
     const callback = () => null;
     return expect(subManager.subscribe({ query, operationName: 'a', callback }))
-        .to.eventually.be.rejectedWith('Subscription query has validation errors');
+      .to.eventually.be.rejectedWith('Subscription query has validation errors');
   });
 
   it('rejects subscriptions with more than one root field', function() {
@@ -214,6 +320,10 @@ describe('SubscriptionManager', function() {
        testFilter(filterBoolean: $filterBoolean)
       }`;
     const callback = function(err, payload){
+      if (err) {
+        done(err);
+        return;
+      }
       try {
         expect(payload.data.testFilter).to.equals('goodFilter');
       } catch (e) {
@@ -230,6 +340,35 @@ describe('SubscriptionManager', function() {
     }).then(subId => {
       subManager.publish('Filter1', {filterBoolean: false });
       subManager.publish('Filter1', {filterBoolean: true });
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('can use a filter function that returns a promise', function(done) {
+    const query = `subscription Filter2($filterBoolean: Boolean){
+       testFilter(filterBoolean: $filterBoolean)
+      }`;
+    const callback = function(err, payload){
+      if (err) {
+        done(err);
+        return;
+      }
+      try {
+        expect(payload.data.testFilter).to.equals('goodFilter');
+      } catch (e) {
+        done(e);
+        return;
+      }
+      done();
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'Filter2',
+      variables: { filterBoolean: true},
+      callback,
+    }).then(subId => {
+      subManager.publish('Filter2', {filterBoolean: false });
+      subManager.publish('Filter2', {filterBoolean: true });
       subManager.unsubscribe(subId);
     });
   });
@@ -281,9 +420,9 @@ describe('SubscriptionManager', function() {
         foo: 'bar',
       };
       expect(pubsub.subscribe).to.have.been.calledWith(
-          sinon.match.string,
-          sinon.match.func,
-          expectedChannelOptions
+        sinon.match.string,
+        sinon.match.func,
+        expectedChannelOptions,
       );
 
       done();
@@ -321,7 +460,7 @@ describe('SubscriptionManager', function() {
       subManager.unsubscribe(subId);
       expect(() => subManager.unsubscribe(subId))
         .to.throw('undefined');
-      });
+    });
   });
 
   it('calls the error callback if there is an execution error', function(done) {
@@ -330,10 +469,7 @@ describe('SubscriptionManager', function() {
     }`;
     const callback = function(err, payload){
       try {
-        expect(payload).to.be.undefined;
-        expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.'
-        );
+        expect(payload).to.be.defined;
       } catch (e) {
         done(e);
         return;
@@ -368,9 +504,84 @@ describe('SubscriptionManager', function() {
       subManager.unsubscribe(subId);
     });
   });
+
+  it('call the error callback if a context functions throws an error', function(done) {
+    const query = `subscription TestContext { testContext }`;
+    const callback = function(err, payload){
+      try {
+        expect(payload).to.be.undefined;
+        expect(err.message).to.equals('context error');
+      } catch (e) {
+        done(e);
+        return;
+      }
+      done();
+    };
+    const context = function() {
+      throw new Error('context error');
+    };
+    subManager.subscribe({
+      query,
+      context,
+      operationName: 'TestContext',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('contextTrigger', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('passes arguments to setupFunction', function(done) {
+    const query = `subscription TestArguments {
+      testArguments(testArgument: 10)
+    }`;
+    const callback = function(error, payload) {
+      try {
+        expect(error).to.be.null;
+        expect(capturedArguments).to.eql({ testArgument: 10 });
+        expect(payload.data.testArguments).to.equal('10');
+        done();
+      } catch (error) {
+        done(error);
+      }
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'TestArguments',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('Trigger1', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
+
+  it('passes defaultValue of argument to setupFunction', function(done) {
+    const query = `subscription TestArguments {
+      testArguments
+    }`;
+    const callback = function(error, payload) {
+      try {
+        expect(error).to.be.null;
+        expect(capturedArguments).to.eql({ testArgument: 1234 });
+        expect(payload.data.testArguments).to.equal('1234');
+        done();
+      } catch (error) {
+        done(error);
+      }
+    };
+    subManager.subscribe({
+      query,
+      operationName: 'TestArguments',
+      variables: {},
+      callback,
+    }).then(subId => {
+      subManager.publish('Trigger1', 'ignored');
+      subManager.unsubscribe(subId);
+    });
+  });
 });
-
-
 // ---------------------------------------------
 // validation tests ....
 
