@@ -2,7 +2,7 @@
 
 ### vNEXT
 - BREAKING CHANGE: Removed deprecated code.
-- BREAKING CHANGE: Minimum GraphQL version bumped to 0.11.X.
+- BREAKING CHANGE: Minimum GraphQL version bumped to 0.10.X.
 
 ### 0.4.4
 - Avoid infinite loop after the last consumer unsubscribes, [Issue #81](https://github.com/apollographql/graphql-subscriptions/issues/81) [PR #84](https://github.com/apollographql/graphql-subscriptions/pull/84)
