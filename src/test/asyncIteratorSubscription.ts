@@ -8,6 +8,7 @@ import * as sinonChai from 'sinon-chai';
 import { isAsyncIterable } from 'iterall';
 import { PubSub } from '../pubsub';
 import { withFilter } from '../with-filter';
+import { ExecutionResult } from 'graphql';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -55,7 +56,7 @@ function buildSchema(iterator, filterFn = defaultFilter) {
 }
 
 describe('GraphQL-JS asyncIterator', () => {
-  it('should allow subscriptions', () => {
+  it('should allow subscriptions', async () => {
     const query = parse(`
       subscription S1 {
 
@@ -67,7 +68,7 @@ describe('GraphQL-JS asyncIterator', () => {
     const schema = buildSchema(origIterator);
 
 
-    const results = subscribe(schema, query);
+    const results = await subscribe(schema, query) as AsyncIterator<ExecutionResult>;
     const payload1 = results.next();
 
     expect(isAsyncIterable(results)).to.be.true;
@@ -107,21 +108,21 @@ describe('GraphQL-JS asyncIterator', () => {
 
     const schema = buildSchema(origIterator, filterFn);
 
-    const results = subscribe(schema, query);
-    expect(isAsyncIterable(results)).to.be.true;
+    subscribe(schema, query).then((results: AsyncIterator<ExecutionResult>) => {
+      expect(isAsyncIterable(results)).to.be.true;
 
-    results.next();
-    results.return();
+      results.next();
+      results.return();
 
-    pubsub.publish(FIRST_EVENT, {});
+      pubsub.publish(FIRST_EVENT, {});
 
-    setTimeout(_ => {
-      done();
-    }, 500);
-
+      setTimeout(_ => {
+        done();
+      }, 500);
+    });
   });
 
-  it('should clear event handlers', () => {
+  it('should clear event handlers', async () => {
     const query = parse(`
       subscription S1 {
         testSubscription
@@ -133,7 +134,7 @@ describe('GraphQL-JS asyncIterator', () => {
     const returnSpy = spy(origIterator, 'return');
     const schema = buildSchema(origIterator);
 
-    const results = subscribe(schema, query);
+    const results = await subscribe(schema, query) as AsyncIterator<ExecutionResult>;
     const end = results.return();
 
     const r = end.then(res => {
