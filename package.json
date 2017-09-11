@@ -13,7 +13,7 @@
     "iterall": "^1.1.1"
   },
   "peerDependencies": {
-    "graphql": "^0.11.3"
+    "graphql": "^0.10.5 || ^0.11.3"
   },
   "scripts": {
     "compile": "tsc",
