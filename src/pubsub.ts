@@ -4,7 +4,7 @@ import { eventEmitterAsyncIterator } from './event-emitter-to-async-iterator';
 
 export class PubSub implements PubSubEngine {
   protected ee: EventEmitter;
-  private subscriptions: { [key: string]: [string, Function] };
+  private subscriptions: { [key: string]: [string, (...args: any[]) => void] };
   private subIdCounter: number;
 
   constructor() {
@@ -19,7 +19,7 @@ export class PubSub implements PubSubEngine {
     return true;
   }
 
-  public subscribe(triggerName: string, onMessage: Function): Promise<number> {
+  public subscribe(triggerName: string, onMessage: (...args: any[]) => void): Promise<number> {
     this.ee.addListener(triggerName, onMessage);
     this.subIdCounter = this.subIdCounter + 1;
     this.subscriptions[this.subIdCounter] = [triggerName, onMessage];
