@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 0.5.1
+- `withFilter` now called with `(rootValue, args, context, info)` [PR #103] (https://github.com/apollographql/graphql-subscriptions/pull/103)
+
 ### 0.5.0
 - BREAKING CHANGE: Removed deprecated code. [PR #104] (https://github.com/apollographql/graphql-subscriptions/pull/104)
 - BREAKING CHANGE: Minimum GraphQL version bumped to 0.10.X. [PR #104] (https://github.com/apollographql/graphql-subscriptions/pull/104)

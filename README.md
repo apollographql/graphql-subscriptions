@@ -75,7 +75,7 @@ When publishing data to subscribers, we need to make sure that each subscribers 
 To do so, we can use `withFilter` helper from this package, which wraps `AsyncIterator` with a filter function, and let you control each publication for each user.
 
 `withFilter` API:
-- `asyncIteratorFn: () => AsyncIterator<any>` : A function that returns `AsyncIterator` you got from your `pubsub.asyncIterator`.
+- `asyncIteratorFn: (rootValue, args, context, info) => AsyncIterator<any>` : A function that returns `AsyncIterator` you got from your `pubsub.asyncIterator`.
 - `filterFn: (payload, variables, context, info) => boolean | Promise<boolean>` - A filter function, executed with the payload (the published value), variables, context and operation info, must return `boolean` or `Promise<boolean>` indicating if the payload should pass to the subscriber.
 
 For example, if `somethingChanged` would also accept a variable with the ID that is relevant, we can use the following code to filter according to it: 
