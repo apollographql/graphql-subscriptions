@@ -8,9 +8,16 @@ You can use it with any GraphQL client and server (not only Apollo).
 
 ### Installation
 
-`npm install graphql-subscriptions` or `yarn add graphql-subscriptions`
+`npm install graphql-subscriptions graphql` or `yarn add graphql-subscriptions graphql`
 
 > This package should be used with a network transport, for example [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
+
+### TypeScript
+
+If you are developing a project that uses this module with TypeScript:
+
+* ensure that your `tsconfig.json` `lib` definition includes `"esnext.asynciterable"`
+* `npm install @types/graphql` or `yarn add @types/graphql`
 
 ### Getting started with your first subscription
 

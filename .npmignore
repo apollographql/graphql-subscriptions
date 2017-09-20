@@ -5,3 +5,6 @@ tsconfig.json
 typings.json
 tslint.json
 dist/test
+yarn.lock
+coverage
+.vscode
