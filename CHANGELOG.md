@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- Remove `@types/graphql` dependency.
 
 ### 0.5.1
 - `withFilter` now called with `(rootValue, args, context, info)` [PR #103] (https://github.com/apollographql/graphql-subscriptions/pull/103)
