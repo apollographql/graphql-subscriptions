@@ -1,7 +1,10 @@
 # Changelog
 
 ### vNEXT
-- Remove `@types/graphql` dependency.
+
+### 0.5.2
+- Require iterall ^1.1.2 to address memory leak [Issue #97] (https://github.com/apollographql/graphql-subscriptions/issues/97)
+- Remove `@types/graphql` dependency. [PR #105] (https://github.com/apollographql/graphql-subscriptions/pull/105)
 
 ### 0.5.1
 - `withFilter` now called with `(rootValue, args, context, info)` [PR #103] (https://github.com/apollographql/graphql-subscriptions/pull/103)
