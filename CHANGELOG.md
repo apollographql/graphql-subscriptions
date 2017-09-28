@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 0.5.3
+- Require iterall ^1.1.3 to address unhandled exceptions
+
 ### 0.5.2
 - Require iterall ^1.1.2 to address memory leak [Issue #97] (https://github.com/apollographql/graphql-subscriptions/issues/97)
 - Remove `@types/graphql` dependency. [PR #105] (https://github.com/apollographql/graphql-subscriptions/pull/105)
