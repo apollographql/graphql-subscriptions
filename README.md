@@ -2,7 +2,7 @@
 
 # graphql-subscriptions
 
-GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL. 
+GraphQL subscriptions is a simple npm package that lets you wire up GraphQL with a pubsub system (like Redis) to implement subscriptions in GraphQL.
 
 You can use it with any GraphQL client and server (not only Apollo).
 
@@ -43,7 +43,7 @@ schema {
 }
 ```
 
-Now, let's create a simple `PubSub` instance - it is a simple pubsub implementation, based on `EventEmitter`. 
+Now, let's create a simple `PubSub` instance - it is a simple pubsub implementation, based on `EventEmitter`.
 
 To create a simple `PubSub` instance, do the following:
 
@@ -85,7 +85,7 @@ To do so, we can use `withFilter` helper from this package, which wraps `AsyncIt
 - `asyncIteratorFn: (rootValue, args, context, info) => AsyncIterator<any>` : A function that returns `AsyncIterator` you got from your `pubsub.asyncIterator`.
 - `filterFn: (payload, variables, context, info) => boolean | Promise<boolean>` - A filter function, executed with the payload (the published value), variables, context and operation info, must return `boolean` or `Promise<boolean>` indicating if the payload should pass to the subscriber.
 
-For example, if `somethingChanged` would also accept a variable with the ID that is relevant, we can use the following code to filter according to it: 
+For example, if `somethingChanged` would also accept a variable with the ID that is relevant, we can use the following code to filter according to it:
 
 ```js
 import { withFilter } from 'graphql-subscriptions';
@@ -131,11 +131,11 @@ You can also manipulate the published payload, by adding `resolve` methods to yo
 const SOMETHING_UPDATED = 'something_updated';
 
 export const resolvers = {
-  Subscription: { 
+  Subscription: {
     somethingChanged: {
       resolve: (payload, args, context, info) => {
         // Manipulate and return the new value
-        
+
         return payload;
       },
       subscribe: () => pubsub.asyncIterator(SOMETHING_UPDATED),
@@ -157,7 +157,7 @@ import { $$asyncIterator } from 'iterall';
 
 export const withStaticFields = (asyncIterator: AsyncIterator<any>, staticFields: Object): Function => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
-    
+
     return {
       next() {
         return asyncIterator.next().then(({ value, done }) => {
@@ -197,6 +197,7 @@ It can be easily replaced with some other implementations of [PubSubEngine inter
 - Use Redis with https://github.com/davidyaha/graphql-redis-subscriptions
 - Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
+- Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You can also implement a `PubSub` of your own, by using the exported interface `PubSubEngine` from this package.
