@@ -75,6 +75,9 @@ Now, GraphQL engine knows that `somethingChanged` is a subscription, and every t
 pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
 ```
 
+> Note that the default PubSub implementation is intended for demo purposes. It only works if you have a single instance of your server and doesn't scale beyond a couple of connections.
+> For production usage you'll want to use one of the [PubSub implementations](#pubsub-implementations) backed by an external store. (e.g. Redis)
+
 ### Filters
 
 When publishing data to subscribers, we need to make sure that each subscribers get only the data it need.
