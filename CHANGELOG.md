@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+### 0.5.4
+- Better define `withFilter` return type [PR #111](https://github.com/apollographql/graphql-subscriptions/pull/111)
+
 ### 0.5.3
 - Require iterall ^1.1.3 to address unhandled exceptions
 
