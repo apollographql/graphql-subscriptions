@@ -3,7 +3,7 @@ import { $$asyncIterator } from 'iterall';
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean;
 export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any) => AsyncIterator<any>;
 
-export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Function => {
+export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): ResolverFn => {
   return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
     const asyncIterator = asyncIteratorFn(rootValue, args, context, info);
 
