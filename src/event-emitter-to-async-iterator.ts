@@ -26,6 +26,12 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
     });
   };
 
+  const removeEventListeners = () => {
+      for (const eventName of eventsArray) {
+          eventEmitter.removeListener(eventName, pushValue);
+      }
+  };
+
   const emptyQueue = () => {
     if (listening) {
       listening = false;
@@ -39,12 +45,6 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
   const addEventListeners = () => {
     for (const eventName of eventsArray) {
       eventEmitter.addListener(eventName, pushValue);
-    }
-  };
-
-  const removeEventListeners = () => {
-    for (const eventName of eventsArray) {
-      eventEmitter.removeListener(eventName, pushValue);
     }
   };
 
