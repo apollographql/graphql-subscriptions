@@ -10,7 +10,13 @@ export const createPersistentPubSub = (
     pubSubEngine: PubSubEngine,
 ) => {
     return {
-        publish(triggerName: string, payload: any, collection: string): boolean {
+        publish: (triggerName: string, payload: any) =>
+            pubSubEngine.publish(triggerName, payload),
+
+        asyncIterator: <T>(triggers: string | string[]): AsyncIterator<T> =>
+            pubSubEngine.asyncIterator(triggers),
+
+        publishWithPersistence(triggerName: string, payload: any, collection: string): boolean {
             store.save(collection, payload);
             return pubSubEngine.publish(triggerName, payload);
         },
@@ -20,7 +26,7 @@ export const createPersistentPubSub = (
         unsubscribe(subId: number) {
             return pubSubEngine.unsubscribe(subId);
         },
-        asyncIterator<T>(triggers: string | string[],
+        asyncIteratorWithPersistence<T>(triggers: string | string[],
                       options: PersistenceAsyncOptions): AsyncIterator<T> {
             return persistenceAsyncIterator(
                 store,

@@ -7,8 +7,15 @@ export interface EventItem {
     payload: any;
 }
 
+export interface FetchNextParams {
+    collection: string;
+    fromSeq: SequenceFieldType;
+    batchSize: number;
+    queryFilter: any;
+}
+
 export interface PersistenceClient {
-    fetchNext: (collection: string, fromSeq: SequenceFieldType, batchSize: number) => Promise<[EventItem]>;
+    fetchNext: (params: FetchNextParams) => Promise<[EventItem]>;
     save: (collection: string, item: Object) => Promise<any>;
 }
 
@@ -16,51 +23,68 @@ export interface PersistenceAsyncOptions {
     lastSequence: SequenceFieldType;
     collection: string;
     batchSize: number;
+    publishDelay: number;
+    queryFilter?: any;
 }
 
 export const persistenceAsyncIterator = <T>(
     store: PersistenceClient,
     options: PersistenceAsyncOptions,
-    afterAsyncIterator: AsyncIterator<any>,
+    asyncIterator: AsyncIterator<any>,
 ): AsyncIterator<T> =>  {
-    const asyncIterator = afterAsyncIterator;
-
     let hasPersistence = true;
     let data: Array<EventItem> = [];
     let cursor = options.lastSequence;
 
-    const extractItem = (resolve) => {
-        const item = data.shift();
-        cursor = item.seq;
-        // console.log('resolve item', `cursor: ${cursor}`, item.payload);
-        resolve({
-            done: false,
-            value: item.payload,
+    const extractItem = (): Promise<IteratorResult<T>> => new Promise((resolve) => {
+            const item = data.shift();
+            cursor = item.seq;
+            // console.log('resolve item', `cursor: ${cursor}`);
+
+            if (options.publishDelay) {
+                setTimeout(() => {
+                    resolve({
+                        done: false,
+                        value: item.payload,
+                    });
+                }, options.publishDelay);
+            } else {
+                resolve({
+                    done: false,
+                    value: item.payload,
+                });
+            }
         });
-    };
-    const fetchData = (resolve) => {
-        store.fetchNext(options.collection, cursor, options.batchSize)
-            .then((result) => {
-                data = result;
-                if (data.length === 0) {
-                    // console.log('NO DATA MORE');
-                    hasPersistence = false;
-                    resolve(asyncIterator.next());
-                } else {
-                    extractItem(resolve);
-                }
-            });
-    };
+
+    const fetchData = (): Promise<[EventItem]> =>
+        store.fetchNext({
+            queryFilter: options.queryFilter || {},
+            collection: options.collection,
+            batchSize: options.batchSize || 10,
+            fromSeq: cursor,
+        });
 
     return {
         next() {
-            return new Promise((resolve) => {
-                if (hasPersistence) {
-                    data.length === 0 ? fetchData(resolve) : extractItem(resolve);
+            if (hasPersistence) {
+                // try to fetch new data
+                if (data.length === 0) {
+                    return fetchData().then((result) => {
+                        // new data
+                        if (result.length !== 0) {
+                            data = result;
+                            return extractItem();
+                        }
+                        // no more data
+                        hasPersistence = false;
+                        return asyncIterator.next();
+                    });
                 } else {
-                    resolve(asyncIterator.next());
+                    return extractItem();
                 }
-            });
+            }
+
+            return asyncIterator.next();
         },
         return() {
             return asyncIterator.return();
