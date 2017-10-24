@@ -16,7 +16,6 @@
   },
   "scripts": {
     "preinstall": "npm run compile",
-    "prepare": "npm run compile",
     "compile": "tsc",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
