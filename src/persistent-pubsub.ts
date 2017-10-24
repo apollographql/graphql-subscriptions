@@ -16,10 +16,15 @@ export const createPersistentPubSub = (
         asyncIterator: <T>(triggers: string | string[]): AsyncIterator<T> =>
             pubSubEngine.asyncIterator(triggers),
 
-        publishWithPersistence(triggerName: string, payload: any, collection: string): boolean {
-            store.save(collection, payload);
-            return pubSubEngine.publish(triggerName, payload);
-        },
+        async publishWithPersistence(triggerName: string, payload: any, collection: string):
+            Promise<{ published: boolean, data: any }> {
+                const data = await store.save(collection, payload);
+                return {
+                    data,
+                    published: pubSubEngine.publish(triggerName, {...payload, ...data}),
+                };
+            },
+
         subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number> {
             return pubSubEngine.subscribe(triggerName, onMessage, options);
         },

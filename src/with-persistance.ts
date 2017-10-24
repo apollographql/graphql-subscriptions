@@ -4,7 +4,6 @@ export type SequenceFieldType = string;
 
 export interface EventItem {
     seq: SequenceFieldType;
-    payload: any;
 }
 
 export interface FetchNextParams {
@@ -36,22 +35,22 @@ export const persistenceAsyncIterator = <T>(
     let data: Array<EventItem> = [];
     let cursor = options.lastSequence;
 
-    const extractItem = (): Promise<IteratorResult<T>> => new Promise((resolve) => {
+    const extractItem = (): Promise<IteratorResult<EventItem>> => new Promise((resolve) => {
             const item = data.shift();
             cursor = item.seq;
-            // console.log('resolve item', `cursor: ${cursor}`);
+            console.log('resolve item', `cursor: ${cursor}`);
 
             if (options.publishDelay) {
                 setTimeout(() => {
                     resolve({
                         done: false,
-                        value: item.payload,
+                        value: item,
                     });
                 }, options.publishDelay);
             } else {
                 resolve({
                     done: false,
-                    value: item.payload,
+                    value: item,
                 });
             }
         });
