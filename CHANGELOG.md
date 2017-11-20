@@ -2,6 +2,23 @@
 
 ### vNEXT
 
+### 0.5.4
+- Better define `withFilter` return type [PR #111](https://github.com/apollographql/graphql-subscriptions/pull/111)
+
+### 0.5.3
+- Require iterall ^1.1.3 to address unhandled exceptions
+
+### 0.5.2
+- Require iterall ^1.1.2 to address memory leak [Issue #97] (https://github.com/apollographql/graphql-subscriptions/issues/97)
+- Remove `@types/graphql` dependency. [PR #105] (https://github.com/apollographql/graphql-subscriptions/pull/105)
+
+### 0.5.1
+- `withFilter` now called with `(rootValue, args, context, info)` [PR #103] (https://github.com/apollographql/graphql-subscriptions/pull/103)
+
+### 0.5.0
+- BREAKING CHANGE: Removed deprecated code. [PR #104] (https://github.com/apollographql/graphql-subscriptions/pull/104)
+- BREAKING CHANGE: Minimum GraphQL version bumped to 0.10.X. [PR #104] (https://github.com/apollographql/graphql-subscriptions/pull/104)
+
 ### 0.4.4
 - Avoid infinite loop after the last consumer unsubscribes, [Issue #81](https://github.com/apollographql/graphql-subscriptions/issues/81) [PR #84](https://github.com/apollographql/graphql-subscriptions/pull/84)
 

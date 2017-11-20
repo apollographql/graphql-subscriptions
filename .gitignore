@@ -1,7 +1,10 @@
-node_modules
 .DS_Store
-dist
+.vscode
 coverage
-typings
+dist
+node_modules
 npm-debug.log
+package-lock.json
+typings
+yarn-error.log
 yarn.lock
