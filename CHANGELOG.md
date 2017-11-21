@@ -2,6 +2,10 @@
 
 ### vNEXT
 
+### 0.5.5
+- FilterFn can return a Promise<boolean>
+- Allow passing in a custom `EventEmitter` to `PubSub`
+
 ### 0.5.4
 - Better define `withFilter` return type [PR #111](https://github.com/apollographql/graphql-subscriptions/pull/111)
 

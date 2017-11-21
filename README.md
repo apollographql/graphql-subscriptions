@@ -43,9 +43,8 @@ schema {
 }
 ```
 
-Now, let's create a simple `PubSub` instance - it is a simple pubsub implementation, based on `EventEmitter`.
-
-To create a simple `PubSub` instance, do the following:
+Now, let's create a simple `PubSub` instance - it is a simple pubsub implementation, based on `EventEmitter`. Alternative `EventEmitter` implementations can be passed by an options object
+to the `PubSub` constructor.
 
 ```js
 import { PubSub } from 'graphql-subscriptions';
