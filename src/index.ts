@@ -1,3 +1,3 @@
 export { PubSubEngine } from './pubsub-engine';
-export { PubSub } from './pubsub';
+export { PubSub, PubSubOptions } from './pubsub';
 export { withFilter, ResolverFn, FilterFn } from './with-filter';
