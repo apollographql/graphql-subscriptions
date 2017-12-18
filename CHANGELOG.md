@@ -2,6 +2,10 @@
 
 ### vNEXT
 
+### 0.5.6
+
+- Add `graphql@0.12` to `peerDependencies`.
+
 ### 0.5.5
 - FilterFn can return a Promise<boolean>
 - Allow passing in a custom `EventEmitter` to `PubSub`
