@@ -137,8 +137,7 @@ export const resolvers = {
     somethingChanged: {
       resolve: (payload, args, context, info) => {
         // Manipulate and return the new value
-
-        return payload;
+        return payload.somethingChanged;
       },
       subscribe: () => pubsub.asyncIterator(SOMETHING_UPDATED),
     },
