@@ -10,17 +10,21 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
     const getNextPromise = () => {
       return asyncIterator
         .next()
-        .then(payload => Promise.all([
-          payload,
-          Promise.resolve(filterFn(payload.value, args, context, info)).catch(() => false),
-        ]))
-        .then(([payload, filterResult]) => {
-          if (filterResult === true || payload.done === true) {
+        .then(payload => {
+          if (payload.done === true) {
             return payload;
           }
 
-          // Skip the current value and wait for the next one
-          return getNextPromise();
+          return Promise.resolve(filterFn(payload.value, args, context, info))
+            .catch(() => false)
+            .then(filterResult => {
+              if (filterResult === true) {
+                return payload;
+              }
+
+              // Skip the current value and wait for the next one
+              return getNextPromise();
+            });
         });
     };
 
