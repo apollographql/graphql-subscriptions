@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### 0.5.7
+
 - Add `graphql@0.13` to `peerDependencies`.
 
 ### 0.5.6
