@@ -2,12 +2,13 @@
 
 ### vNEXT
 
-### 0.5.7
+### 0.5.8
+- Bump iterall version
 
+### 0.5.7
 - Add `graphql@0.13` to `peerDependencies`.
 
 ### 0.5.6
-
 - Add `graphql@0.12` to `peerDependencies`.
 
 ### 0.5.5
