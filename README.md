@@ -196,6 +196,7 @@ For more information about `AsyncIterator`:
 
 It can be easily replaced with some other implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub.ts#L21-L25). There are a couple of them out there:
 - Use Redis with https://github.com/davidyaha/graphql-redis-subscriptions
+- Use Google PubSub with https://github.com/axelspringer/graphql-google-pubsub
 - Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
