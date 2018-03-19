@@ -145,6 +145,37 @@ export const resolvers = {
 }
 ````
 
+### Usage with callback listeners
+
+Your database might have callback-based listeners for changes, for example something like this:
+
+```JS
+const listenToNewMessages = (callback) => {
+  return db.table('messages').listen(newMessage => callback(newMessage));
+}
+
+// Kick off the listener
+listenToNewMessages(message => {
+  console.log(message);
+})
+```
+
+The `callback` function would be called every time a new message is saved in the database. Unfortunately, that doesn't play very well with async iterators out of the box because callbacks are push-based, where async iterators are pull-based.
+
+We recommend using the [`callback-to-async-iterator`](https://github.com/withspectrum/callback-to-async-iterator) module to convert your callback-based listener into an async iterator:
+
+```js
+import asyncify from 'callback-to-async-iterator';
+
+export const resolvers = {
+  Subscription: {
+    somethingChanged: {
+      subscribe: () => asyncify(listenToChanges),
+    },
+  },
+}
+````
+
 ### Custom `AsyncIterator` Wrappers
 
 The value you should return from your `subscribe` resolver must be an `AsyncIterator`.
