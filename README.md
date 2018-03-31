@@ -231,6 +231,7 @@ It can be easily replaced with some other implementations of [PubSubEngine inter
 - Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
+- Use Postgres with https://github.com/GraphQLCollege/graphql-postgres-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You can also implement a `PubSub` of your own, by using the exported interface `PubSubEngine` from this package.
