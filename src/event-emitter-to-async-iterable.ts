@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { eventEmitterAsyncIterator } from './event-emitter-to-async-iterator';
 
 export function eventEmitterAsyncIterable<T>(eventEmitter: EventEmitter,
-                                             eventsNames: string | string[]): AsyncIterator<T> {
+                                             eventsNames: string | string[]): AsyncIterable<T> {
   return {
     [$$asyncIterator]() {
       return eventEmitterAsyncIterator(eventEmitter, eventsNames);
