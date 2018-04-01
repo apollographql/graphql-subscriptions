@@ -65,6 +65,7 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
       return Promise.reject(error);
     },
     [$$asyncIterator]() {
+      console.warn('Using eventEmitterToAsyncIterator[$$asyncIterator]() (or using pubsub.asyncIterator as an async iterable) can leave dangling listeners and has been deprecated.  Use eventEmitterToAsyncIterable/pubsub.asyncIterable instead.')
       return this;
     },
   };
