@@ -108,4 +108,17 @@ describe('AsyncIterator', () => {
 
     ps.publish(eventName, { test: true });
   });
+
+  it('should not register event listeners before next() is called', () => {
+    const evnetName = 'test';
+    class TestPubSub extends PubSub {
+      public listenerCount(eventName: string): number {
+        return this.ee.listenerCount(eventName);
+      }
+    }
+    const ps = new TestPubSub();
+    ps.asyncIterator(evnetName);
+
+    expect(ps.listenerCount(evnetName)).to.equal(0);
+  });
 });
