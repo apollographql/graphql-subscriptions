@@ -66,9 +66,9 @@ export const resolvers = {
 }
 ```
 
-> Subscriptions resolvers are not a function, but an object with `subscribe` method, than returns `AsyncIterable`.
+> Subscriptions resolvers are not a function, but an object with `subscribe` method, that returns `AsyncIterable`.
 
-Now, GraphQL engine knows that `somethingChanged` is a subscription, and every time we will use `pubsub.publish` over this topic - is will publish it using the transport we use:
+Now, the GraphQL engine knows that `somethingChanged` is a subscription, and every time we use `pubsub.publish` over this topic - it will publish it using the transport we use:
 
 ```js
 pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
