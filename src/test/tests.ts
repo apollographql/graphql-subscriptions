@@ -26,17 +26,12 @@ describe('PubSub', function() {
     });
   });
 
-  it('can unsubscribe', function(done) {
+  it('can unsubscribe', async () => {
     const ps = new PubSub();
-    ps.subscribe('a', payload => {
-      assert(false);
-    }).then((subId) => {
-      ps.unsubscribe(subId);
-      const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true; // True because publish success is not
-                                  // indicated by trigger having subscriptions
-      done(); // works because pubsub is synchronous
-    });
+    let subId = await ps.subscribe('a', payload => { assert(false); });
+    ps.unsubscribe(subId);
+    let succeed = await ps.publish('a', 'test');
+    expect(succeed).to.be.undefined;
   });
 });
 
