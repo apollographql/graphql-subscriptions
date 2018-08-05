@@ -241,4 +241,4 @@ You can also implement a `PubSub` of your own, by using the exported interface `
 
 `SubscriptionManager` is the previous alternative for using `graphql-js` subscriptions directly, and it's now deprecated.
 
-If you are looking for it's API docs, refer to [a previous commit of the repository](https://github.com/apollographql/graphql-subscriptions/blob/5eaee92cd50060b3f3637f00c53960f51a07d0b2/README.md)
+If you are looking for its API docs, refer to [a previous commit of the repository](https://github.com/apollographql/graphql-subscriptions/blob/5eaee92cd50060b3f3637f00c53960f51a07d0b2/README.md)
