@@ -17,10 +17,9 @@ export class PubSub implements PubSubEngine {
     this.subIdCounter = 0;
   }
 
-  public publish(triggerName: string, payload: any): boolean {
+  public publish(triggerName: string, payload: any): Promise<void> {
     this.ee.emit(triggerName, payload);
-
-    return true;
+    return Promise.resolve();
   }
 
   public subscribe(triggerName: string, onMessage: (...args: any[]) => void): Promise<number> {

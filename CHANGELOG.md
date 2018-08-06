@@ -1,6 +1,9 @@
 # Changelog
 
 ### vNEXT
+- BREAKING CHANGE: Changed return type of `publish`. [Issue #160] (https://github.com/apollographql/graphql-subscriptions/issues/160)
+- Bump versions of various devDependencies to fix security issues, use newer tslint config [PR #163] (https://github.com/apollographql/graphql-subscriptions/pull/163)
+[PR #164] (https://github.com/apollographql/graphql-subscriptions/pull/164)
 
 ### 0.5.8
 - Bump iterall version

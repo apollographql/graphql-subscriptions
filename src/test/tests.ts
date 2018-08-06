@@ -26,33 +26,28 @@ describe('PubSub', function() {
     });
   });
 
-  it('can unsubscribe', function(done) {
+  it('can unsubscribe', async () => {
     const ps = new PubSub();
-    ps.subscribe('a', payload => {
-      assert(false);
-    }).then((subId) => {
-      ps.unsubscribe(subId);
-      const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true; // True because publish success is not
-                                  // indicated by trigger having subscriptions
-      done(); // works because pubsub is synchronous
-    });
+    let subId = await ps.subscribe('a', payload => { assert(false); });
+    ps.unsubscribe(subId);
+    let succeed = await ps.publish('a', 'test');
+    expect(succeed).to.be.undefined;
   });
 });
 
 describe('AsyncIterator', () => {
-  it('should expose valid asyncItrator for a specific event', () => {
-    const evnetName = 'test';
+  it('should expose valid asyncIterator for a specific event', () => {
+    const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(evnetName);
+    const iterator = ps.asyncIterator(eventName);
     expect(iterator).to.not.be.undefined;
     expect(isAsyncIterable(iterator)).to.be.true;
   });
 
   it('should trigger event on asyncIterator when published', done => {
-    const evnetName = 'test';
+    const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(evnetName);
+    const iterator = ps.asyncIterator(eventName);
 
     iterator.next().then(result => {
       expect(result).to.not.be.undefined;
@@ -61,22 +56,22 @@ describe('AsyncIterator', () => {
       done();
     });
 
-    ps.publish(evnetName, { test: true });
+    ps.publish(eventName, { test: true });
   });
 
   it('should not trigger event on asyncIterator when publishing other event', () => {
-    const evnetName = 'test2';
+    const eventName = 'test2';
     const ps = new PubSub();
     const iterator = ps.asyncIterator('test');
     const spy = sinon.spy();
 
     iterator.next().then(spy);
-    ps.publish(evnetName, { test: true });
+    ps.publish(eventName, { test: true });
     expect(spy).not.to.have.been.called;
   });
 
   it('register to multiple events', done => {
-    const evnetName = 'test2';
+    const eventName = 'test2';
     const ps = new PubSub();
     const iterator = ps.asyncIterator(['test', 'test2']);
     const spy = sinon.spy();
@@ -86,13 +81,13 @@ describe('AsyncIterator', () => {
       expect(spy).to.have.been.called;
       done();
     });
-    ps.publish(evnetName, { test: true });
+    ps.publish(eventName, { test: true });
   });
 
   it('should not trigger event on asyncIterator already returned', done => {
-    const evnetName = 'test';
+    const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(evnetName);
+    const iterator = ps.asyncIterator(eventName);
 
     iterator.next().then(result => {
       expect(result).to.not.be.undefined;
@@ -100,7 +95,7 @@ describe('AsyncIterator', () => {
       expect(result.done).to.be.false;
     });
 
-    ps.publish(evnetName, { test: true });
+    ps.publish(eventName, { test: true });
 
     iterator.next().then(result => {
       expect(result).to.not.be.undefined;
@@ -111,6 +106,6 @@ describe('AsyncIterator', () => {
 
     iterator.return();
 
-    ps.publish(evnetName, { test: true });
+    ps.publish(eventName, { test: true });
   });
 });
