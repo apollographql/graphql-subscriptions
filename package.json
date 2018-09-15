@@ -11,7 +11,7 @@
     "iterall": "^1.2.1"
   },
   "peerDependencies": {
-    "graphql": "^0.10.5 || ^0.11.3 || ^0.12.0 || ^0.13.0"
+    "graphql": "^0.10.5 || ^0.11.3 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "scripts": {
     "clean": "rimraf dist coverage",
@@ -28,14 +28,14 @@
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.0",
-    "@types/graphql": "^0.11.3",
+    "@types/graphql": "^14.0.0",
     "@types/mocha": "^2.2.39",
     "@types/node": "^8.0.28",
     "@types/sinon": "^5.0.1",
     "@types/sinon-chai": "^3.2.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
-    "graphql": "^0.13.0",
+    "graphql": "^14.0.0",
     "istanbul": "^1.0.0-alpha.2",
     "mocha": "^5.2.0",
     "remap-istanbul": "^0.9.1",
