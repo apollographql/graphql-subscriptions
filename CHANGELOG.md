@@ -1,9 +1,15 @@
 # Changelog
 
-### vNEXT
-- BREAKING CHANGE: Changed return type of `publish`. [Issue #160] (https://github.com/apollographql/graphql-subscriptions/issues/160)
-- Bump versions of various devDependencies to fix security issues, use newer tslint config [PR #163] (https://github.com/apollographql/graphql-subscriptions/pull/163)
-[PR #164] (https://github.com/apollographql/graphql-subscriptions/pull/164)
+### 1.0.0
+
+- BREAKING CHANGE: Changed return type of `publish`.  <br/>
+  [@grantwwu](https://github.com/grantwwu) in [#162](https://github.com/apollographql/graphql-subscriptions/pull/162)
+- Bump versions of various devDependencies to fix security issues, use
+  newer tslint config.  <br/>
+  [@grantwwu](https://github.com/grantwwu) in [#163](https://github.com/apollographql/graphql-subscriptions/pull/163)
+- Allows `graphql` 14 as a peer dep, forces `graphql` 14 as a dev dep, and
+  has been updated to use `@types/graphql` 14.  <br/>
+  [@hwillson](https://github.com/hwillson) in [#172](https://github.com/apollographql/graphql-subscriptions/pull/172)
 
 ### 0.5.8
 - Bump iterall version
