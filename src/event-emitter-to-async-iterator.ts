@@ -5,7 +5,7 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
                                              eventsNames: string | string[]): AsyncIterator<T> {
   const pullQueue = [];
   const pushQueue = [];
-  const eventsArray = typeof eventsNames === 'string' ? [eventsNames] : eventsNames;
+  const eventsArray = /(string|symbol)/.test(typeof eventsNames) ? [eventsNames] : eventsNames;
   let listening = true;
 
   const pushValue = event => {
