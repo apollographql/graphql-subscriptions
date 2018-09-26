@@ -7,7 +7,7 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
   const pushQueue = [];
   const eventsArray = typeof eventsNames === 'string' ? [eventsNames] : eventsNames;
   let listening = true;
-  let addedListeners = false; 
+  let addedListeners = false;
 
   const pushValue = event => {
     if (pullQueue.length !== 0) {
@@ -30,7 +30,7 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
   const emptyQueue = () => {
     if (listening) {
       listening = false;
-      if (addedListeners) removeEventListeners();
+      if (addedListeners) { removeEventListeners(); }
       pullQueue.forEach(resolve => resolve({ value: undefined, done: true }));
       pullQueue.length = 0;
       pushQueue.length = 0;
@@ -51,7 +51,7 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
 
   return {
     next() {
-      if (!listening) return this.return();
+      if (!listening) { return this.return(); }
       if (!addedListeners) {
         addEventListeners();
         addedListeners = true;

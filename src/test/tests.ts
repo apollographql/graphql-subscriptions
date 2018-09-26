@@ -110,15 +110,15 @@ describe('AsyncIterator', () => {
   });
 
   it('should not register event listeners before next() is called', () => {
-    const evnetName = 'test';
+    const testEventName = 'test';
     class TestPubSub extends PubSub {
       public listenerCount(eventName: string): number {
         return this.ee.listenerCount(eventName);
       }
     }
     const ps = new TestPubSub();
-    ps.asyncIterator(evnetName);
+    ps.asyncIterator(testEventName);
 
-    expect(ps.listenerCount(evnetName)).to.equal(0);
+    expect(ps.listenerCount(testEventName)).to.equal(0);
   });
 });
