@@ -15,14 +15,12 @@ const expect = chai.expect;
 const assert = chai.assert;
 
 describe('PubSub', function() {
-  it('can subscribe and is called when events happen', function(done) {
+  it('can subscribe and is called when events happen', () => {
     const ps = new PubSub();
-    ps.subscribe('a', payload => {
+    return ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
-      done();
     }).then(() => {
-      const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true;
+      return ps.publish('a', 'test');
     });
   });
 
