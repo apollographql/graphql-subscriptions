@@ -15,14 +15,12 @@ const expect = chai.expect;
 const assert = chai.assert;
 
 describe('PubSub', function() {
-  it('can subscribe and is called when events happen', function(done) {
+  it('can subscribe and is called when events happen', () => {
     const ps = new PubSub();
-    ps.subscribe('a', payload => {
+    return ps.subscribe('a', payload => {
       expect(payload).to.equals('test');
-      done();
     }).then(() => {
-      const succeed = ps.publish('a', 'test');
-      expect(succeed).to.be.true;
+      return ps.publish('a', 'test');
     });
   });
 
@@ -107,5 +105,18 @@ describe('AsyncIterator', () => {
     iterator.return();
 
     ps.publish(eventName, { test: true });
+  });
+
+  it('should not register event listeners before next() is called', () => {
+    const testEventName = 'test';
+    class TestPubSub extends PubSub {
+      public listenerCount(eventName: string): number {
+        return this.ee.listenerCount(eventName);
+      }
+    }
+    const ps = new TestPubSub();
+    ps.asyncIterator(testEventName);
+
+    expect(ps.listenerCount(testEventName)).to.equal(0);
   });
 });
