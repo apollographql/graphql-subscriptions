@@ -233,6 +233,7 @@ It can be easily replaced with some other implementations of [PubSubEngine inter
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
 - Use Postgres with https://github.com/GraphQLCollege/graphql-postgres-subscriptions
 - Use NATS with https://github.com/moonwalker/graphql-nats-subscriptions
+- Use multiple backends with https://github.com/jcoreio/graphql-multiplex-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You can also implement a `PubSub` of your own, by using the exported interface `PubSubEngine` from this package.
