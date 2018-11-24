@@ -95,6 +95,8 @@ describe('AsyncIterator', () => {
 
     ps.publish(eventName, { test: true });
 
+    iterator.return();
+
     iterator.next().then(result => {
       expect(result).to.not.be.undefined;
       expect(result.value).to.be.undefined;
@@ -102,7 +104,6 @@ describe('AsyncIterator', () => {
       done();
     });
 
-    iterator.return();
 
     ps.publish(eventName, { test: true });
   });
