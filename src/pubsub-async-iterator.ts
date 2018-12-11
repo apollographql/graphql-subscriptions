@@ -3,24 +3,28 @@ import {PubSubEngine} from './pubsub-engine';
 
 /**
  * A class for digesting PubSubEngine events via the new AsyncIterator interface.
- * This implementation is a generic version of the one located at
+ * This implementation is a generic version of the AsyncIterator, so any PubSubEngine may
+ * be used.
  * @class
  *
  * @constructor
  *
  * @property pullQueue @type {Function[]}
  * A queue of resolve functions waiting for an incoming event which has not yet arrived.
- * This queue expands as next() calls are made without PubSubEngine events occurring in between.
+ * This queue expands as next() calls are made without PubSubEngine events occurring in-between.
  *
- * @property pushQueue @type {any[]}
- * A queue of PubSubEngine events waiting for next() calls to be made.
- * This queue expands as PubSubEngine events arrice without next() calls occurring in between.
+ * @property pushQueue @type {T[]}
+ * A queue of PubSubEngine events waiting for next() calls to be made, which returns the queued events
+ * for handling. This queue expands as PubSubEngine events arrive without next() calls occurring in-between.
  *
  * @property eventsArray @type {string[]}
- * An array of PubSubEngine event names which this PubSubAsyncIterator should watch.
+ * An array of PubSubEngine event names that this PubSubAsyncIterator should watch.
  *
  * @property allSubscribed @type {Promise<number[]>}
- * A promise of a list of all subscription ids to the passed PubSubEngine.
+ * undefined until next() called for the first time, afterwards is a promise of an array of all
+ * subscription ids, where each subscription id identified a subscription on the PubSubEngine.
+ * The undefined initialization ensures that subscriptions are not made to the PubSubEngine
+ * before next() has ever been called.
  *
  * @property listening @type {boolean}
  * Whether or not the PubSubAsynIterator is in listening mode (responding to incoming PubSubEngine events and next() calls).
