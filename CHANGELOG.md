@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.1.0
+
+- Replaced `eventEmitterAsynIterator` with default generic `AsyncIterator`. `extends PubSubEngine` automatically uses generic implementation. No breaking changes for those who continue to use `implements PubSubEngine`. See PR #78 
+
 ### 1.0.0
 
 - BREAKING CHANGE: Changed return type of `publish`.  <br/>
