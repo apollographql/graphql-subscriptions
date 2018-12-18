@@ -2,7 +2,7 @@
 
 ### 1.1.0
 
-- Replaced `eventEmitterAsynIterator` with default generic `AsyncIterator`. `extends PubSubEngine` automatically uses generic implementation. No breaking changes for those who continue to use `implements PubSubEngine`. See PR #78 
+- Replaced `eventEmitterAsynIterator` with default generic `AsyncIterator` named `PubSubAsyncIterator`. `extends PubSubEngine` automatically uses generic implementation. No breaking changes for those who continue to use `implements PubSubEngine`. See PR [#78](https://github.com/apollographql/graphql-subscriptions/pull/78).
 
 ### 1.0.0
 
