@@ -26,9 +26,9 @@ import {PubSubEngine} from './pubsub-engine';
  * The undefined initialization ensures that subscriptions are not made to the PubSubEngine
  * before next() has ever been called.
  *
- * @property listening @type {boolean}
- * Whether or not the PubSubAsynIterator is in listening mode (responding to incoming PubSubEngine events and next() calls).
- * Listening begins as true and turns to false once the return method is called.
+ * @property running @type {boolean}
+ * Whether or not the PubSubAsynIterator is in running mode (responding to incoming PubSubEngine events and next() calls).
+ * running begins as true and turns to false once the return method is called.
  *
  * @property pubsub @type {PubSubEngine}
  * The PubSubEngine whose events will be observed.
@@ -39,30 +39,30 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   private pushQueue: T[];
   private eventsArray: string[];
   private allSubscribed: Promise<number[]>;
-  private listening: boolean;
+  private running: boolean;
   private pubsub: PubSubEngine;
 
   constructor(pubsub: PubSubEngine, eventNames: string | string[]) {
     this.pubsub = pubsub;
     this.pullQueue = [];
     this.pushQueue = [];
-    this.listening = true;
+    this.running = true;
+    this.allSubscribed = null;
     this.eventsArray = typeof eventNames === 'string' ? [eventNames] : eventNames;
-    this.allSubscribed = this.subscribeAll();
   }
 
   public async next(): Promise<IteratorResult<T>> {
-    await this.allSubscribed;
-    return this.listening ? this.pullValue() : this.return();
+    if (!this.allSubscribed) await (this.allSubscribed = this.subscribeAll());
+    return this.pullValue()
   }
 
   public async return(): Promise<IteratorResult<T>> {
-    this.emptyQueue(await this.allSubscribed);
+    await this.emptyQueue();
     return { value: undefined, done: true };
   }
 
   public async throw(error) {
-    this.emptyQueue(await this.allSubscribed);
+    await this.emptyQueue();
     return Promise.reject(error);
   }
 
@@ -73,7 +73,10 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   private async pushValue(event: T) {
     await this.allSubscribed;
     if (this.pullQueue.length !== 0) {
-      this.pullQueue.shift()({ value: event, done: false });
+      this.pullQueue.shift()(this.running
+        ? { value: event, done: false }
+        : { value: undefined, done: true }
+      );
     } else {
       this.pushQueue.push(event);
     }
@@ -82,20 +85,24 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   private pullValue(): Promise<IteratorResult<T>> {
     return new Promise((resolve => {
       if (this.pushQueue.length !== 0) {
-        resolve({ value: this.pushQueue.shift(), done: false });
+        resolve(this.running
+          ? { value: this.pushQueue.shift(), done: false }
+          : { value: undefined, done: true }
+        );
       } else {
         this.pullQueue.push(resolve);
       }
     }).bind(this));
   }
 
-  private emptyQueue(subscriptionIds: number[]) {
-    if (this.listening) {
-      this.listening = false;
-      this.unsubscribeAll(subscriptionIds);
+  private async emptyQueue() {
+    if (this.running) {
+      this.running = false;
       this.pullQueue.forEach(resolve => resolve({ value: undefined, done: true }));
       this.pullQueue.length = 0;
       this.pushQueue.length = 0;
+      const subscriptionIds = await this.allSubscribed;
+      if (subscriptionIds) this.unsubscribeAll(subscriptionIds);
     }
   }
 

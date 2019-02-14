@@ -88,19 +88,21 @@ describe('AsyncIterator', () => {
     const iterator = ps.asyncIterator(eventName);
 
     iterator.next().then(result => {
-      expect(result).to.not.be.undefined;
-      expect(result.value).to.not.be.undefined;
-      expect(result.done).to.be.false;
-    });
+      expect(result).to.deep.equal({
+        value: undefined,
+        done: true,
+      });
+    }).catch(done);
 
     ps.publish(eventName, { test: true });
 
     iterator.next().then(result => {
-      expect(result).to.not.be.undefined;
-      expect(result.value).to.be.undefined;
-      expect(result.done).to.be.true;
+      expect(result).to.deep.equal({
+        value: undefined,
+        done: true,
+      });
       done();
-    });
+    }).catch(done);
 
     iterator.return();
 
