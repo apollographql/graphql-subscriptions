@@ -230,6 +230,7 @@ It can be easily replaced with some other implementations of [PubSubEngine inter
 - Use Google PubSub with https://github.com/axelspringer/graphql-google-pubsub
 - Use MQTT enabled broker with https://github.com/davidyaha/graphql-mqtt-subscriptions
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
+- Use AMQP (RabbitMQ) with https://github.com/Surnet/graphql-amqp-subscriptions
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
 - Use Postgres with https://github.com/GraphQLCollege/graphql-postgres-subscriptions
 - Use NATS with https://github.com/moonwalker/graphql-nats-subscriptions
