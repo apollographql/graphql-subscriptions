@@ -52,7 +52,7 @@ import { PubSub } from 'graphql-subscriptions';
 export const pubsub = new PubSub();
 ```
 
-Now, implement your Subscriptions type resolver, using the `pubsub.asyncIterator` to map the event you need:
+Now, implement your Subscriptions type resolver, using `pubsub.asyncIterable` to map the event you need:
 
 ```js
 const SOMETHING_CHANGED_TOPIC = 'something_changed';
@@ -60,7 +60,7 @@ const SOMETHING_CHANGED_TOPIC = 'something_changed';
 export const resolvers = {
   Subscription: {
     somethingChanged: {
-      subscribe: () => pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC),
+      subscribe: () => pubsub.asyncIterable(SOMETHING_CHANGED_TOPIC),
     },
   },
 }
@@ -81,10 +81,10 @@ pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
 
 When publishing data to subscribers, we need to make sure that each subscribers get only the data it need.
 
-To do so, we can use `withFilter` helper from this package, which wraps `AsyncIterator` with a filter function, and let you control each publication for each user.
+To do so, we can use `withFilter` helper from this package, which wraps `AsyncIterable` with a filter function, and let you control each publication for each user.
 
 `withFilter` API:
-- `asyncIteratorFn: (rootValue, args, context, info) => AsyncIterator<any>` : A function that returns `AsyncIterator` you got from your `pubsub.asyncIterator`.
+- `asyncIterableFn: (rootValue, args, context, info) => AsyncIterable<any>` : A function that returns `AsyncIterable` you got from your `pubsub.asyncIterable`.
 - `filterFn: (payload, variables, context, info) => boolean | Promise<boolean>` - A filter function, executed with the payload (the published value), variables, context and operation info, must return `boolean` or `Promise<boolean>` indicating if the payload should pass to the subscriber.
 
 For example, if `somethingChanged` would also accept a variable with the ID that is relevant, we can use the following code to filter according to it:
@@ -97,7 +97,7 @@ const SOMETHING_CHANGED_TOPIC = 'something_changed';
 export const resolvers = {
   Subscription: {
     somethingChanged: {
-      subscribe: withFilter(() => pubsub.asyncIterator(SOMETHING_CHANGED_TOPIC), (payload, variables) => {
+      subscribe: withFilter(() => pubsub.asyncIterable(SOMETHING_CHANGED_TOPIC), (payload, variables) => {
         return payload.somethingChanged.id === variables.relevantId;
       }),
     },
@@ -119,7 +119,7 @@ const SOMETHING_REMOVED = 'something_removed';
 export const resolvers = {
   Subscription: {
     somethingChanged: {
-      subscribe: () => pubsub.asyncIterator([ SOMETHING_UPDATED, SOMETHING_CREATED, SOMETHING_REMOVED ]),
+      subscribe: () => pubsub.asyncIterable([ SOMETHING_UPDATED, SOMETHING_CREATED, SOMETHING_REMOVED ]),
     },
   },
 }
@@ -139,7 +139,7 @@ export const resolvers = {
         // Manipulate and return the new value
         return payload.somethingChanged;
       },
-      subscribe: () => pubsub.asyncIterator(SOMETHING_UPDATED),
+      subscribe: () => pubsub.asyncIterable(SOMETHING_UPDATED),
     },
   },
 }
@@ -176,20 +176,20 @@ export const resolvers = {
 }
 ````
 
-### Custom `AsyncIterator` Wrappers
+### Custom `AsyncIterable` Wrappers
 
-The value you should return from your `subscribe` resolver must be an `AsyncIterator`.
+The value you should return from your `subscribe` resolver must be an `AsyncIterable`.
 
-You can use this value and wrap it with another `AsyncIterator` to implement custom logic over your subscriptions.
+You can use this value and wrap it with another `AsyncIterable` to implement custom logic over your subscriptions.
 
 For example, the following implementation manipulate the payload by adding some static fields:
 
 ```typescript
-import { $$asyncIterator } from 'iterall';
+import { $$asyncIterator, getAsyncIterator } from 'iterall';
 
-export const withStaticFields = (asyncIterator: AsyncIterator<any>, staticFields: Object): Function => {
-  return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
-
+export const withStaticFields = (asyncIterable: AsyncIterable<any>, staticFields: Object): Function => {
+  return (rootValue: any, args: any, context: any, info: any): AsyncIterable<any> => {
+    const asyncIterator = getAsyncIterator(asyncIterable);
     return {
       next() {
         return asyncIterator.next().then(({ value, done }) => {
@@ -211,14 +211,14 @@ export const withStaticFields = (asyncIterator: AsyncIterator<any>, staticFields
       [$$asyncIterator]() {
         return this;
       },
-    };
+    } as AsyncIterator<any> as AsyncIterableIterator<any>;
   };
 };
 ```
 
 > You can also take a look at `withFilter` for inspiration.
 
-For more information about `AsyncIterator`:
+For more information about `AsyncIterable` and `AsyncIterator`:
 - [TC39 Proposal](https://github.com/tc39/proposal-async-iteration)
 - [iterall](https://github.com/leebyron/iterall)
 - [IxJS](https://github.com/ReactiveX/IxJS)

@@ -1,8 +1,8 @@
 import { $$asyncIterator } from 'iterall';
 import { EventEmitter } from 'events';
 
-export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
-                                             eventsNames: string | string[]): AsyncIterator<T> {
+export function eventEmitterAsyncIterable<T>(eventEmitter: EventEmitter,
+                                             eventsNames: string | string[]): AsyncIterableIterator<T> {
   const pullQueue = [];
   const pushQueue = [];
   const eventsArray = typeof eventsNames === 'string' ? [eventsNames] : eventsNames;
@@ -71,5 +71,6 @@ export function eventEmitterAsyncIterator<T>(eventEmitter: EventEmitter,
     [$$asyncIterator]() {
       return this;
     },
-  };
+  } as AsyncIterator<T> as any as AsyncIterableIterator<T>;
+  // Asserting as AsyncIterator first so that next, return, and throw are still type checked
 }

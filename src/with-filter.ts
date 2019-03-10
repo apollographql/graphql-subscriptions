@@ -1,11 +1,12 @@
-import { $$asyncIterator } from 'iterall';
+import { $$asyncIterator, getAsyncIterator } from 'iterall';
 
 export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean | Promise<boolean>;
-export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any) => AsyncIterator<any>;
+export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any) => AsyncIterable<any>;
 
-export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): ResolverFn => {
-  return (rootValue: any, args: any, context: any, info: any): AsyncIterator<any> => {
-    const asyncIterator = asyncIteratorFn(rootValue, args, context, info);
+export const withFilter = (asyncIterableFn: ResolverFn, filterFn: FilterFn): ResolverFn => {
+  return (rootValue: any, args: any, context: any, info: any): AsyncIterableIterator<any> => {
+    const asyncIterable = asyncIterableFn(rootValue, args, context, info);
+    const asyncIterator = getAsyncIterator(asyncIterable);
 
     const getNextPromise = () => {
       return asyncIterator
@@ -41,6 +42,7 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
       [$$asyncIterator]() {
         return this;
       },
-    };
+    } as AsyncIterator<any> as any as AsyncIterableIterator<any>;
+    // Asserting as AsyncIterator first so that next, return, and throw are still type checked
   };
 };

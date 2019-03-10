@@ -5,7 +5,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spy } from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import { isAsyncIterable } from 'iterall';
+import { getAsyncIterator, isAsyncIterable } from 'iterall';
 import { PubSub } from '../pubsub';
 import { withFilter, FilterFn } from '../with-filter';
 import { ExecutionResult } from 'graphql';
@@ -64,7 +64,7 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterable(FIRST_EVENT);
     const schema = buildSchema(origIterator);
 
 
@@ -90,7 +90,7 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterable(FIRST_EVENT);
     const schema = buildSchema(origIterator, () => Promise.resolve(true));
 
     const results = await subscribe(schema, query) as AsyncIterator<ExecutionResult>;
@@ -115,7 +115,7 @@ describe('GraphQL-JS asyncIterator', () => {
     `);
 
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterable(FIRST_EVENT);
 
     let counter = 0;
 
@@ -155,7 +155,8 @@ describe('GraphQL-JS asyncIterator', () => {
     `);
 
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterable = pubsub.asyncIterable(FIRST_EVENT);
+    const origIterator = getAsyncIterator(origIterable);
     const returnSpy = spy(origIterator, 'return');
     const schema = buildSchema(origIterator);
 

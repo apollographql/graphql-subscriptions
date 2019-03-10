@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { PubSubEngine } from './pubsub-engine';
-import { eventEmitterAsyncIterator } from './event-emitter-to-async-iterator';
+import { eventEmitterAsyncIterable } from './event-emitter-to-async-iterable';
 
 export interface PubSubOptions {
   eventEmitter?: EventEmitter;
@@ -36,7 +36,7 @@ export class PubSub implements PubSubEngine {
     this.ee.removeListener(triggerName, onMessage);
   }
 
-  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return eventEmitterAsyncIterator<T>(this.ee, triggers);
+  public asyncIterable<T>(triggers: string | string[]): AsyncIterable<T> {
+    return eventEmitterAsyncIterable<T>(this.ee, triggers);
   }
 }
