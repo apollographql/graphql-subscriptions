@@ -27,7 +27,7 @@ import { PubSubEngine } from './pubsub-engine';
  * before next() has ever been called.
  *
  * @property running @type {boolean}
- * Whether or not the PubSubAsynIterator is in running mode (responding to incoming PubSubEngine events and next() calls).
+ * Whether or not the PubSubAsyncIterator is in running mode (responding to incoming PubSubEngine events and next() calls).
  * running begins as true and turns to false once the return method is called.
  *
  * @property pubsub @type {PubSubEngine}
