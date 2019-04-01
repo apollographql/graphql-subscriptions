@@ -35,7 +35,7 @@ import { PubSubEngine } from './pubsub-engine';
  */
 export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
 
-  private pullQueue: ((value?: any) => Promise<IteratorResult<T>>)[];
+  private pullQueue: ((value: IteratorResult<T>) => void)[];
   private pushQueue: T[];
   private eventsArray: string[];
   private allSubscribed: Promise<number[]>;
