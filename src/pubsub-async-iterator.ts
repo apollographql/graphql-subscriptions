@@ -1,5 +1,5 @@
 import { $$asyncIterator } from 'iterall';
-import {PubSubEngine} from './pubsub-engine';
+import { PubSubEngine } from './pubsub-engine';
 
 /**
  * A class for digesting PubSubEngine events via the new AsyncIterator interface.
@@ -52,8 +52,8 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   }
 
   public async next(): Promise<IteratorResult<T>> {
-    if (!this.allSubscribed) await (this.allSubscribed = this.subscribeAll());
-    return this.pullValue()
+    if (!this.allSubscribed) { await (this.allSubscribed = this.subscribeAll()); }
+    return this.pullValue();
   }
 
   public async return(): Promise<IteratorResult<T>> {
@@ -75,7 +75,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     if (this.pullQueue.length !== 0) {
       this.pullQueue.shift()(this.running
         ? { value: event, done: false }
-        : { value: undefined, done: true }
+        : { value: undefined, done: true },
       );
     } else {
       this.pushQueue.push(event);
@@ -102,7 +102,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
       this.pullQueue.length = 0;
       this.pushQueue.length = 0;
       const subscriptionIds = await this.allSubscribed;
-      if (subscriptionIds) this.unsubscribeAll(subscriptionIds);
+      if (subscriptionIds) { this.unsubscribeAll(subscriptionIds); }
     }
   }
 
