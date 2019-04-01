@@ -5,7 +5,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spy } from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import { isAsyncIterable } from 'iterall';
+import { createAsyncIterator, isAsyncIterable } from 'iterall';
 import { PubSub } from '../pubsub';
 import { withFilter, FilterFn } from '../with-filter';
 import { ExecutionResult } from 'graphql';
@@ -170,4 +170,37 @@ describe('GraphQL-JS asyncIterator', () => {
 
     return r;
   });
+});
+
+function isEven(x: number) {
+    if (x === undefined) {
+        throw Error('Undefined value passed to filterFn');
+    }
+    return x % 2 === 0;
+}
+
+let testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 3, 4, 5, 6, 7, 8]);
+// Work around https://github.com/leebyron/iterall/issues/48
+(testFiniteAsyncIterator as any).throw = function (error) {
+    return Promise.reject(error);
+};
+(testFiniteAsyncIterator as any).return = function () {
+    return { value: undefined, done: true };
+};
+
+describe('withFilter', () => {
+    it('works properly with finite asyncIterators', async () => {
+        let filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
+
+        for (let i = 1; i <= 4; i++) {
+            let result = await filteredAsyncIterator.next();
+            expect(result).to.not.be.undefined;
+            expect(result.value).to.equal(i * 2);
+            expect(result.done).to.be.false;
+        }
+        let doneResult = await filteredAsyncIterator.next();
+        expect(doneResult).to.not.be.undefined;
+        expect(doneResult.value).to.be.undefined;
+        expect(doneResult.done).to.be.true;
+    });
 });
