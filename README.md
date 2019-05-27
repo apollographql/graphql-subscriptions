@@ -237,6 +237,7 @@ It can be easily replaced with some other implementations of [PubSubEngine abstr
 - Use Mongoose (MongoDB) with https://github.com/Nickolasmv/graphql-mongoose-subscriptions
 - Use multiple backends with https://github.com/jcoreio/graphql-multiplex-subscriptions
 - Use Ably for multi-protocol support with https://github.com/ably-labs/graphql-ably-pubsub
+- Use Google Firestore with https://github.com/m19c/graphql-firestore-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You can also implement a `PubSub` of your own, by using the exported abstract class `PubSubEngine` from this package. By using `extends PubSubEngine` you use the default `asyncIterator` method implementation; by using `implements PubSubEngine` you must implement your own `AsyncIterator`.
