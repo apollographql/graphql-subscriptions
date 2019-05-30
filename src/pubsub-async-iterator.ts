@@ -52,8 +52,10 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   }
 
   public async next(): Promise<IteratorResult<T>> {
-    if (!this.allSubscribed) { await (this.allSubscribed = this.subscribeAll()); }
-    return this.pullValue();
+    if (this.running && !this.allSubscribed) {
+      await (this.allSubscribed = this.subscribeAll());
+    }
+    return this.running ? this.pullValue() : this.return();
   }
 
   public async return(): Promise<IteratorResult<T>> {

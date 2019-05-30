@@ -8,6 +8,7 @@ import * as sinonChai from 'sinon-chai';
 
 import { PubSub } from '../pubsub';
 import { isAsyncIterable } from 'iterall';
+import { doesNotThrow } from 'assert';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -120,5 +121,14 @@ describe('AsyncIterator', () => {
     ps.asyncIterator(testEventName);
 
     expect(ps.listenerCount(testEventName)).to.equal(0);
+  });
+  it('should allow returning before next() is called', async () => {
+    const testEventName = 'test';
+    const ps = new PubSub();
+    const ai = ps.asyncIterator(testEventName);
+    const promise = ai.next();
+    ai.return();
+    await promise;
+    expect(promise).to.eventually.deep.equal({ value: undefined, done: true });
   });
 });
