@@ -217,7 +217,7 @@ let testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 
 
 describe('withFilter', () => {
   it('works properly with finite asyncIterators', async () => {
-    let filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
+    let filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)();
 
     for (let i = 1; i <= 4; i++) {
       let result = await filteredAsyncIterator.next();
