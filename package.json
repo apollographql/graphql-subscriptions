@@ -1,6 +1,6 @@
 {
   "name": "graphql-subscriptions",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "GraphQL subscriptions for node.js",
   "main": "dist/index.js",
   "repository": {
@@ -21,8 +21,8 @@
     "posttest": "npm run lint",
     "lint": "tslint --project ./tsconfig.json ./src/**/*.ts",
     "watch": "tsc -w",
-    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js ",
-    "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js",
+    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js",
+    "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "prepublishOnly": "npm run clean && npm run compile"
   },
@@ -31,7 +31,7 @@
     "@types/graphql": "^14.0.0",
     "@types/mocha": "^2.2.39",
     "@types/node": "^8.0.28",
-    "@types/sinon": "5.0.1",
+    "@types/sinon": "5.0.2",
     "@types/sinon-chai": "^3.2.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",

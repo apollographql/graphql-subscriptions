@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.1.0
+
+- Fix [#132](https://github.com/apollographql/graphql-subscriptions/issues/132) - withFilter was previously always passing undefined as its first argument to the filterFn
+- Partially attempt to fix [#143](https://github.com/apollographql/graphql-subscriptions/issues/143) - try to reduce occurrence of certain memory leaks with the built-in PubSubEngine implementation
+- Replaced `eventEmitterAsyncIterator` with default generic `AsyncIterator` named `PubSubAsyncIterator`. `extends PubSubEngine` automatically uses generic implementation. No breaking changes for those who continue to use `implements PubSubEngine`. See PR [#78](https://github.com/apollographql/graphql-subscriptions/pull/78).
+
 ### 1.0.0
 
 - BREAKING CHANGE: Changed return type of `publish`.  <br/>
