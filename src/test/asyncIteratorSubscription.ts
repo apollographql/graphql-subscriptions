@@ -29,9 +29,6 @@ const FIRST_EVENT = 'FIRST_EVENT';
 const defaultFilter = (payload) => true;
 
 function buildSchema(iterator, filterFn: FilterFn = defaultFilter) {
-  return buildSchemaIteratorFn(() => iterator, filterFn);
-}
-function buildSchemaIteratorFn(iteratorFn, filterFn: FilterFn = defaultFilter) {
   return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
@@ -49,7 +46,7 @@ function buildSchemaIteratorFn(iteratorFn, filterFn: FilterFn = defaultFilter) {
       fields: {
         testSubscription: {
           type: GraphQLString,
-          subscribe: withFilter(iteratorFn, filterFn),
+          subscribe: withFilter(() => iterator, filterFn),
           resolve: root => {
             return 'FIRST_EVENT';
           },
@@ -59,7 +56,7 @@ function buildSchemaIteratorFn(iteratorFn, filterFn: FilterFn = defaultFilter) {
   });
 }
 
-function buildSchemaAsyncIteratorFn(asyncIteratorFn, filterFn: FilterFn = defaultFilter) {
+function buildSchemaWithAsyncIteratorFn(asyncIteratorFn, filterFn: FilterFn = defaultFilter) {
   return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
@@ -147,7 +144,7 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const schema = buildSchemaAsyncIteratorFn(async () => Promise.resolve(pubsub.asyncIterator(FIRST_EVENT)));
+    const schema = buildSchemaWithAsyncIteratorFn(async () => Promise.resolve(pubsub.asyncIterator(FIRST_EVENT)));
 
     const results = await subscribe(schema, query) as AsyncIterator<ExecutionResult>;
     const payload1 = results.next();
