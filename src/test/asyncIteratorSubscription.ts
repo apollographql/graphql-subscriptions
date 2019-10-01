@@ -22,6 +22,7 @@ import {
 } from 'graphql';
 
 import { subscribe } from 'graphql/subscription';
+import { withFilterAsync } from '../with-filter-async';
 
 const FIRST_EVENT = 'FIRST_EVENT';
 
@@ -49,6 +50,34 @@ function buildSchemaIteratorFn(iteratorFn, filterFn: FilterFn = defaultFilter) {
         testSubscription: {
           type: GraphQLString,
           subscribe: withFilter(iteratorFn, filterFn),
+          resolve: root => {
+            return 'FIRST_EVENT';
+          },
+        },
+      },
+    }),
+  });
+}
+
+function buildSchemaAsyncIteratorFn(asyncIteratorFn, filterFn: FilterFn = defaultFilter) {
+  return new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        testString: {
+          type: GraphQLString,
+          resolve: function (_, args) {
+            return 'works';
+          },
+        },
+      },
+    }),
+    subscription: new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+        testSubscription: {
+          type: GraphQLString,
+          subscribe: withFilterAsync(asyncIteratorFn, filterFn),
           resolve: root => {
             return 'FIRST_EVENT';
           },
@@ -118,7 +147,7 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const schema = buildSchemaIteratorFn(async () => Promise.resolve(pubsub.asyncIterator(FIRST_EVENT)));
+    const schema = buildSchemaAsyncIteratorFn(async () => Promise.resolve(pubsub.asyncIterator(FIRST_EVENT)));
 
     const results = await subscribe(schema, query) as AsyncIterator<ExecutionResult>;
     const payload1 = results.next();
@@ -217,7 +246,7 @@ let testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 
 
 describe('withFilter', () => {
   it('works properly with finite asyncIterators', async () => {
-    let filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)();
+    let filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
 
     for (let i = 1; i <= 4; i++) {
       let result = await filteredAsyncIterator.next();
