@@ -30,7 +30,7 @@
     "@types/chai-as-promised": "^7.1.0",
     "@types/graphql": "^14.0.0",
     "@types/mocha": "^2.2.39",
-    "@types/node": "^8.0.28",
+    "@types/node": "^12.7.8",
     "@types/sinon": "5.0.2",
     "@types/sinon-chai": "^3.2.0",
     "chai": "^4.1.2",
@@ -43,7 +43,7 @@
     "sinon": "^6.1.4",
     "sinon-chai": "^3.2.0",
     "tslint": "^5.11.0",
-    "typescript": "^2.3.2"
+    "typescript": "^3.6.3"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
