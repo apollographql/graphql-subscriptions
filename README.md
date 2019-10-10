@@ -145,6 +145,10 @@ export const resolvers = {
 }
 ````
 
+Note that `resolve` methods execute *after* `subscribe`, so if the code in `subscribe` depends on a
+manipulated payload field, you will need to factor out the manipulation and call it from both `subscribe`
+and `resolve`.
+
 ### Usage with callback listeners
 
 Your database might have callback-based listeners for changes, for example something like this:
@@ -182,7 +186,7 @@ The value you should return from your `subscribe` resolver must be an `AsyncIter
 
 You can use this value and wrap it with another `AsyncIterator` to implement custom logic over your subscriptions.
 
-For example, the following implementation manipulate the payload by adding some static fields:
+For example, the following implementation manipulates the payload by adding some static fields:
 
 ```typescript
 import { $$asyncIterator } from 'iterall';
