@@ -16,7 +16,7 @@ You can use it with any GraphQL client and server (not only Apollo).
 
 If you are developing a project that uses this module with TypeScript:
 
-* ensure that your `tsconfig.json` `lib` definition includes `"esnext.asynciterable"`
+* ensure that your `tsconfig.json` `lib` definition includes `"es2018.asynciterable"`
 * `npm install @types/graphql` or `yarn add @types/graphql`
 
 ### Getting started with your first subscription
