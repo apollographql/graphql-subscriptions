@@ -41,7 +41,7 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
       });
     };
 
-    return {
+    const asyncIterator2 = {
       next() {
         return getNextPromise();
       },
@@ -55,5 +55,7 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
         return this;
       },
     };
+
+    return asyncIterator2;
   };
 };
