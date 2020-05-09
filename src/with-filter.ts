@@ -38,6 +38,7 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
       throw(error) {
         return asyncIterator.throw(error);
       },
+      // @ts-ignore
       [$$asyncIterator]() {
         return this;
       },
