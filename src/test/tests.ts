@@ -7,7 +7,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as sinonChai from 'sinon-chai';
 
 import { PubSub } from '../pubsub';
-import { isAsyncIterable } from 'iterall';
+
+const isAsyncIterableIterator = (input: unknown): input is AsyncIterableIterator<unknown>  => {
+  return input != null && typeof input[Symbol.asyncIterator] === 'function';
+};
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -39,7 +42,7 @@ describe('AsyncIterator', () => {
     const ps = new PubSub();
     const iterator = ps.asyncIterator(eventName);
     expect(iterator).to.not.be.undefined;
-    expect(isAsyncIterable(iterator)).to.be.true;
+    expect(isAsyncIterableIterator(iterator)).to.be.true;
   });
 
   it('should trigger event on asyncIterator when published', done => {
