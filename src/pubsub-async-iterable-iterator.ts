@@ -16,7 +16,7 @@ import { PubSubEngine } from './pubsub-engine';
  * A queue of PubSubEngine events waiting for next() calls to be made, which returns the queued events
  * for handling. This queue expands as PubSubEngine events arrive without next() calls occurring in-between.
  *
- * @property eventsArray @type {string[]}
+ * @property eventsArray @type {readonly string[]}
  * An array of PubSubEngine event names that this PubSubAsyncIterator should watch.
  *
  * @property allSubscribed @type {Promise<number[]>}
@@ -36,12 +36,12 @@ export class PubSubAsyncIterableIterator<T> implements AsyncIterableIterator<T> 
 
   private pullQueue: ((value: IteratorResult<T>) => void)[];
   private pushQueue: T[];
-  private eventsArray: string[];
+  private eventsArray: readonly string[];
   private allSubscribed: Promise<number[]>;
   private running: boolean;
   private pubsub: PubSubEngine;
 
-  constructor(pubsub: PubSubEngine, eventNames: string | string[]) {
+  constructor(pubsub: PubSubEngine, eventNames: string | readonly string[]) {
     this.pubsub = pubsub;
     this.pullQueue = [];
     this.pushQueue = [];
