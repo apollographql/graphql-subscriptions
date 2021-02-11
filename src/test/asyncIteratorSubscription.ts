@@ -172,35 +172,72 @@ describe('GraphQL-JS asyncIterator', () => {
   });
 });
 
-function isEven(x: number) {
-  if (x === undefined) {
-    throw Error('Undefined value passed to filterFn');
-  }
-  return x % 2 === 0;
-}
-
-let testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 3, 4, 5, 6, 7, 8]);
-// Work around https://github.com/leebyron/iterall/issues/48
-(testFiniteAsyncIterator as any).throw = function (error) {
-  return Promise.reject(error);
-};
-(testFiniteAsyncIterator as any).return = function () {
-  return { value: undefined, done: true };
-};
-
 describe('withFilter', () => {
+
   it('works properly with finite asyncIterators', async () => {
-    let filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
+    const isEven = (x: number) => x % 2 === 0;
+
+    const testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 3, 4, 5, 6, 7, 8]);
+    // Work around https://github.com/leebyron/iterall/issues/48
+    testFiniteAsyncIterator.throw = function (error) {
+      return Promise.reject(error);
+    };
+    testFiniteAsyncIterator.return = function () {
+      return Promise.resolve({ value: undefined, done: true });
+    };
+
+    const filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
 
     for (let i = 1; i <= 4; i++) {
-      let result = await filteredAsyncIterator.next();
+      const result = await filteredAsyncIterator.next();
       expect(result).to.not.be.undefined;
       expect(result.value).to.equal(i * 2);
       expect(result.done).to.be.false;
     }
-    let doneResult = await filteredAsyncIterator.next();
+    const doneResult = await filteredAsyncIterator.next();
     expect(doneResult).to.not.be.undefined;
     expect(doneResult.value).to.be.undefined;
     expect(doneResult.done).to.be.true;
   });
+
+  // Old implementation of with-filter was leaking memory with was visible
+  // in case with long lived subscriptions where filter is skipping most of messages
+  // https://github.com/apollographql/graphql-subscriptions/issues/212
+  it('does not leak memory with promise chain #memory', async function () {
+    this.timeout(5000);
+    let stopped = false;
+
+    let index = 0;
+    const asyncIterator: AsyncIterator<any> = {
+      next() {
+        if (stopped) {
+          return Promise.resolve({done: true, value: undefined});
+        }
+        index += 1;
+        return new Promise(resolve => setImmediate(resolve))
+          .then(() => ({done: false, value: index}));
+      },
+      return() {
+        return Promise.resolve({ value: undefined, done: true });
+      },
+      throw(error) {
+        return Promise.reject(error);
+      },
+    };
+
+    const filteredAsyncIterator = withFilter(() => asyncIterator, () => stopped)();
+
+    global.gc();
+    const heapUsed = process.memoryUsage().heapUsed;
+    const nextPromise = filteredAsyncIterator.next();
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    global.gc();
+    const heapUsed2 = process.memoryUsage().heapUsed;
+    stopped = true;
+    await nextPromise;
+
+    // Heap memory goes up for less than 1%
+    expect(Math.max(0, heapUsed2 - heapUsed) / heapUsed).to.be.lessThan(0.01);
+  });
+
 });
