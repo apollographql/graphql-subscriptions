@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.0
+
+- Add `graphql@15` to `peerDependencies`.
+
 ### 1.1.0
 
 - Fix [#132](https://github.com/apollographql/graphql-subscriptions/issues/132) - withFilter was previously always passing undefined as its first argument to the filterFn

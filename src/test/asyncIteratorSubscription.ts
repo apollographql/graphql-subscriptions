@@ -133,9 +133,8 @@ describe('GraphQL-JS asyncIterator', () => {
 
     const schema = buildSchema(origIterator, filterFn);
 
-    subscribe(schema, query).then((resultsIn) => {
-      expect(isAsyncIterable(resultsIn)).to.be.true;
-      const results = resultsIn as AsyncIterator<ExecutionResult>;
+    Promise.resolve(subscribe(schema, query)).then((results: AsyncIterableIterator<ExecutionResult>) => {
+      expect(isAsyncIterable(results)).to.be.true;
 
       results.next();
       results.return();
