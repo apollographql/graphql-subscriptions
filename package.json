@@ -17,6 +17,7 @@
     "clean": "rimraf dist coverage",
     "compile": "tsc",
     "pretest": "npm run compile",
+    "prepare": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
     "lint": "tslint --project ./tsconfig.json ./src/**/*.ts",
