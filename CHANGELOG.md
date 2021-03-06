@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.1
+
+- Fix memory leak in `withFilter`. [PR #209](https://github.com/apollographql/graphql-subscriptions/pull/209)
+
 ### 1.2.0
 
 - Add `graphql@15` to `peerDependencies`.
