@@ -12,27 +12,40 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
     const asyncIterator = asyncIteratorFn(rootValue, args, context, info);
 
     const getNextPromise = () => {
-      return asyncIterator
-        .next()
-        .then(payload => {
-          if (payload.done === true) {
-            return payload;
-          }
+      return new Promise<IteratorResult<any>>((resolve, reject) => {
 
-          return Promise.resolve(filterFn(payload.value, args, context, info))
-            .catch(() => false)
-            .then(filterResult => {
-              if (filterResult === true) {
-                return payload;
+        const inner = () => {
+          asyncIterator
+            .next()
+            .then(payload => {
+              if (payload.done === true) {
+                resolve(payload);
+                return;
               }
-
-              // Skip the current value and wait for the next one
-              return getNextPromise();
+              Promise.resolve(filterFn(payload.value, args, context, info))
+                .catch(() => false) // We ignore errors from filter function
+                .then(filterResult => {
+                  if (filterResult === true) {
+                    resolve(payload);
+                    return;
+                  }
+                  // Skip the current value and wait for the next one
+                  inner();
+                  return;
+                });
+            })
+            .catch((err) => {
+              reject(err);
+              return;
             });
-        });
+        };
+
+        inner();
+
+      });
     };
 
-    return {
+    const asyncIterator2 = {
       next() {
         return getNextPromise();
       },
@@ -46,5 +59,7 @@ export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): Res
         return this;
       },
     };
+
+    return asyncIterator2;
   };
 };
