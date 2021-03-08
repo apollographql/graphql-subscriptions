@@ -17,7 +17,6 @@
     "clean": "rimraf dist coverage",
     "compile": "tsc",
     "pretest": "npm run compile",
-    "prepare": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
     "lint": "tslint --project ./tsconfig.json ./src/**/*.ts",
@@ -25,7 +24,7 @@
     "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js",
     "coverage": "node ./node_modules/istanbul/lib/cli.js cover _mocha -- --full-trace ./dist/test/tests.js ./dist/test/asyncIteratorSubscription.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "prepublishOnly": "npm run clean && npm run compile"
+    "prepare": "npm run clean && npm run compile"
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.3",
