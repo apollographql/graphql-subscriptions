@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.0.0
+
+- Support `graphql@16`; do not support `graphql` older than 15.7.2.
+
 ### 1.2.1
 
 - Fix memory leak in `withFilter`. [PR #209](https://github.com/apollographql/graphql-subscriptions/pull/209)
