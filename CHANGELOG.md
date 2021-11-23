@@ -2,7 +2,7 @@
 
 ### 2.0.1 (not yet released)
 
-- `withFilter` TypeScript improvements.
+- `withFilter` TypeScript improvements. <br/>
   [@HofmannZ](https://github.com/HofmannZ) in [#230](https://github.com/apollographql/graphql-subscriptions/pull/230)
 
 ### 2.0.0
