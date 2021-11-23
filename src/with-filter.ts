@@ -1,14 +1,22 @@
 import { $$asyncIterator } from 'iterall';
 
-export type FilterFn = (rootValue?: any, args?: any, context?: any, info?: any) => boolean | Promise<boolean>;
-export type ResolverFn = (rootValue?: any, args?: any, context?: any, info?: any) => AsyncIterator<any>;
+export type FilterFn<TSource = any, TArgs = any, TContext = any> = (rootValue?: TSource, args?: TArgs, context?: TContext, info?: any) => boolean | Promise<boolean>;
+export type ResolverFn<TSource = any, TArgs = any, TContext = any> = (rootValue?: TSource, args?: TArgs, context?: TContext, info?: any) => AsyncIterator<any>;
 
 interface IterallAsyncIterator<T> extends AsyncIterator<T> {
   [$$asyncIterator](): IterallAsyncIterator<T>;
 }
 
-export const withFilter = (asyncIteratorFn: ResolverFn, filterFn: FilterFn): ResolverFn => {
-  return (rootValue: any, args: any, context: any, info: any): IterallAsyncIterator<any> => {
+export type WithFilter<TSource = any, TArgs = any, TContext = any> = (
+  asyncIteratorFn: ResolverFn<TSource, TArgs, TContext>,
+  filterFn: FilterFn<TSource, TArgs, TContext>
+) => ResolverFn<TSource, TArgs, TContext>;
+
+export function withFilter<TSource = any, TArgs = any, TContext = any>(
+  asyncIteratorFn: ResolverFn<TSource, TArgs, TContext>,
+  filterFn: FilterFn<TSource, TArgs, TContext>
+): ResolverFn<TSource, TArgs, TContext> {
+  return (rootValue: TSource, args: TArgs, context: TContext, info: any): IterallAsyncIterator<any> => {
     const asyncIterator = asyncIteratorFn(rootValue, args, context, info);
 
     const getNextPromise = () => {

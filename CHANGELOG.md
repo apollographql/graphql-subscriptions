@@ -1,5 +1,10 @@
 # Changelog
 
+### 2.0.1 (not yet released)
+
+- `withFilter` TypeScript improvements.
+  [@HofmannZ](https://github.com/HofmannZ) in [#230](https://github.com/apollographql/graphql-subscriptions/pull/230)
+
 ### 2.0.0
 
 - Support `graphql@16`; do not support `graphql` older than 15.7.2.
