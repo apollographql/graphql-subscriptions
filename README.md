@@ -232,6 +232,7 @@ It can be easily replaced with some other implementations of [PubSubEngine abstr
 - Use RabbitMQ with https://github.com/cdmbase/graphql-rabbitmq-subscriptions
 - Use AMQP (RabbitMQ) with https://github.com/Surnet/graphql-amqp-subscriptions
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
+- Use Kafka (using [Kafkajs](https://www.npmjs.com/package/kafkajs)) with https://github.com/tomasAlabes/graphql-kafkajs-subscriptions
 - Use Postgres with https://github.com/GraphQLCollege/graphql-postgres-subscriptions
 - Use NATS with https://github.com/moonwalker/graphql-nats-subscriptions
 - Use Mongoose (MongoDB) with https://github.com/Nickolasmv/graphql-mongoose-subscriptions
