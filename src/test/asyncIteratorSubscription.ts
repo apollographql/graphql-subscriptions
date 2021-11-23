@@ -135,7 +135,7 @@ describe('GraphQL-JS asyncIterator', () => {
 
     const schema = buildSchema(origIterator, filterFn);
 
-    Promise.resolve(subscribe({ schema, document: query })).then((results: AsyncIterableIterator<ExecutionResult>) => {
+    Promise.resolve(subscribe({ schema, document: query })).then((results: AsyncIterableIterator<ExecutionResult> | ExecutionResult) => {
       expect(isAsyncIterableIterator(results)).to.be.true;
 
       (results as AsyncGenerator<ExecutionResult, void, void>).next();
@@ -188,19 +188,7 @@ const testFiniteAsyncIterator: AsyncIterableIterator<number> = (async function *
 })();
 
 describe('withFilter', () => {
-
   it('works properly with finite asyncIterators', async () => {
-    const isEven = (x: number) => x % 2 === 0;
-
-    const testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 3, 4, 5, 6, 7, 8]);
-    // Work around https://github.com/leebyron/iterall/issues/48
-    testFiniteAsyncIterator.throw = function (error) {
-      return Promise.reject(error);
-    };
-    testFiniteAsyncIterator.return = function () {
-      return Promise.resolve({ value: undefined, done: true });
-    };
-
     const filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
 
     for (let i = 1; i <= 4; i++) {
