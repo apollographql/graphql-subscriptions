@@ -234,7 +234,7 @@ It can be easily replaced with some other implementations of [PubSubEngine abstr
 - Use Kafka with https://github.com/ancashoria/graphql-kafka-subscriptions
 - Use Postgres with https://github.com/GraphQLCollege/graphql-postgres-subscriptions
 - Use NATS with https://github.com/moonwalker/graphql-nats-subscriptions
-- Use MONGODB(MONGOOSE) with https://github.com/Nickolasmv/graphql-mongoose-subscriptions
+- Use Mongoose (MongoDB) with https://github.com/Nickolasmv/graphql-mongoose-subscriptions
 - Use multiple backends with https://github.com/jcoreio/graphql-multiplex-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
