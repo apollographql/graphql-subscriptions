@@ -145,9 +145,7 @@ export const resolvers = {
 }
 ````
 
-Note that `resolve` methods execute *after* `subscribe`, so if the code in `subscribe` depends on a
-manipulated payload field, you will need to factor out the manipulation and call it from both `subscribe`
-and `resolve`.
+Note that `resolve` methods execute *after* `subscribe`, so if the code in `subscribe` depends on a manipulated payload field, you will need to factor out the manipulation and call it from both `subscribe` and `resolve`.
 
 ### Usage with callback listeners
 
