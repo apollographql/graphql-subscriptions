@@ -2,7 +2,8 @@
 
 ### 3.0.0 (not yet released)
 
-- TODO
+- Add an optional generic type map to `PubSub`. <br/>
+  [@cursorsdottsx](https://github.com/cursorsdottsx) in [#245](https://github.com/apollographql/graphql-subscriptions/pull/245)
 
 ### 2.0.1 (not yet released)
 
