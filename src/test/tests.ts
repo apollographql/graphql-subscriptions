@@ -74,7 +74,7 @@ describe('AsyncIterator', () => {
   it('register to multiple events', done => {
     const eventName = 'test2';
     const ps = new PubSub();
-    const iterator = ps.asyncIterableIterator(['test', 'test2']);
+    const iterator = ps.asyncIterator(['test', 'test2'] as const);
     const spy = sinon.spy();
 
     iterator.next().then(() => {
