@@ -8,6 +8,8 @@
   [@cursorsdottsx](https://github.com/cursorsdottsx) in [#245](https://github.com/apollographql/graphql-subscriptions/pull/245)
 - Support `readonly` arrays of event names. <br/>
   [@rh389](https://github.com/rh389) in [#234](https://github.com/apollographql/graphql-subscriptions/pull/234)
+- Support returning a Promise of an `AsyncIterator` as the `withFilter` resolver function. <br/>
+  [@maclockard](https://github.com/maclockard) in [#220](https://github.com/apollographql/graphql-subscriptions/pull/220)
 
 ### 2.0.1 (not yet released)
 
