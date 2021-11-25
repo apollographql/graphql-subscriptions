@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.0.0 (not yet released)
+
+- TODO
+
 ### 2.0.1 (not yet released)
 
 - `withFilter` TypeScript improvements. <br/>
