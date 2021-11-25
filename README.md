@@ -25,11 +25,11 @@ To begin with GraphQL subscriptions, start by defining a GraphQL `Subscription` 
 
 ```graphql
 type Subscription {
-    somethingChanged: Result
+  somethingChanged: Result
 }
 
 type Result {
-    id: String
+  id: String
 }
 ```
 
@@ -52,14 +52,14 @@ import { PubSub } from 'graphql-subscriptions';
 export const pubsub = new PubSub();
 ```
 
-However, if you're using TypeScript, then you can use the optional generic parameter for added type-safety:
+If you're using TypeScript you can use the optional generic parameter for added type-safety:
 
 ```ts
 import { PubSub } from "apollo-server-express";
 
 const pubsub = new PubSub<{
-    EVENT_ONE: { data: number; };
-    EVENT_TWO: { data: string; };
+  EVENT_ONE: { data: number; };
+  EVENT_TWO: { data: string; };
 }>();
 
 pubsub.publish("EVENT_ONE", { data: 42 });
@@ -72,7 +72,7 @@ pubsub.subscribe("EVENTONE", () => {});         // ! ERROR
 pubsub.subscribe("EVENT_TWO", () => {});
 ```
 
-Then, implement your Subscriptions type resolver, using the `pubsub.asyncIterator` to map the event you need:
+Next implement your Subscriptions type resolver using the `pubsub.asyncIterator` to map the event you need:
 
 ```js
 const SOMETHING_CHANGED_TOPIC = 'something_changed';
@@ -88,7 +88,7 @@ export const resolvers = {
 
 > Subscriptions resolvers are not a function, but an object with `subscribe` method, that returns `AsyncIterable`.
 
-Finally, the GraphQL engine knows that `somethingChanged` is a subscription, and every time we use `pubsub.publish` over this topic - it will publish it using the transport we use:
+The GraphQL engine now knows that `somethingChanged` is a subscription, and every time we use `pubsub.publish` it will publish content using our chosen transport layer:
 
 ```js
 pubsub.publish(SOMETHING_CHANGED_TOPIC, { somethingChanged: { id: "123" }});
