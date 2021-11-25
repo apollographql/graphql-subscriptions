@@ -2,10 +2,10 @@
 
 ### 3.0.0 (not yet released)
 
+- **[BREAKING]** Replace `iterall` use with native `Symbol.asyncIterator`. <br/>
+  [@n1ru4l](https://github.com/n1ru4l) in [#232](https://github.com/apollographql/graphql-subscriptions/pull/232)
 - Add an optional generic type map to `PubSub`. <br/>
   [@cursorsdottsx](https://github.com/cursorsdottsx) in [#245](https://github.com/apollographql/graphql-subscriptions/pull/245)
-- Replace `iterall` use with native `Symbol.asyncIterator`. <br/>
-  [@n1ru4l](https://github.com/n1ru4l) in [#232](https://github.com/apollographql/graphql-subscriptions/pull/232)
 - Support `readonly` arrays of event names. <br/>
   [@rh389](https://github.com/rh389) in [#234](https://github.com/apollographql/graphql-subscriptions/pull/234)
 
