@@ -1,4 +1,3 @@
-import { $$asyncIterator } from 'iterall';
 import { PubSubEngine } from './pubsub-engine';
 
 /**
@@ -33,7 +32,7 @@ import { PubSubEngine } from './pubsub-engine';
  * @property pubsub @type {PubSubEngine}
  * The PubSubEngine whose events will be observed.
  */
-export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
+export class PubSubAsyncIterableIterator<T> implements AsyncIterableIterator<T> {
 
   private pullQueue: ((value: IteratorResult<T>) => void)[];
   private pushQueue: T[];
@@ -66,7 +65,7 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     return Promise.reject(error);
   }
 
-  public [$$asyncIterator]() {
+  public [Symbol.asyncIterator]() {
     return this;
   }
 
@@ -119,5 +118,4 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
       this.pubsub.unsubscribe(subscriptionId);
     }
   }
-
 }
