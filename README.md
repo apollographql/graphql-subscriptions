@@ -241,6 +241,7 @@ It can be easily replaced with some other implementations of [PubSubEngine abstr
 - Use multiple backends with https://github.com/jcoreio/graphql-multiplex-subscriptions
 - Use Ably for multi-protocol support with https://github.com/ably-labs/graphql-ably-pubsub
 - Use Google Firestore with https://github.com/m19c/graphql-firestore-subscriptions
+- Use Google Firebase Realtime Database with https://github.com/swantzter/graphql-firebase-subscriptions
 - Use Amazon's Simple Notification Service (SNS) and Simple Queue Service (SQS) with https://github.com/sagahead-io/graphql-snssqs-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
