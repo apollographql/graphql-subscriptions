@@ -17,7 +17,7 @@ export class PubSub extends PubSubEngine {
     this.subIdCounter = 0;
   }
 
-  public publish(triggerName: string, payload: any): Promise<void> {
+  public publish<Payload>(triggerName: string, payload: Payload): Promise<void> {
     this.ee.emit(triggerName, payload);
     return Promise.resolve();
   }
