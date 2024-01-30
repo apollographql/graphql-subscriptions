@@ -7,7 +7,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as sinonChai from 'sinon-chai';
 
 import { PubSub } from '../pubsub';
-import { isAsyncIterable } from 'iterall';
+
+const isAsyncIterableIterator = (input: unknown): input is AsyncIterableIterator<unknown>  => {
+  return input != null && typeof input[Symbol.asyncIterator] === 'function';
+};
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -37,15 +40,15 @@ describe('AsyncIterator', () => {
   it('should expose valid asyncIterator for a specific event', () => {
     const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(eventName);
+    const iterator = ps.asyncIterableIterator(eventName);
     expect(iterator).to.not.be.undefined;
-    expect(isAsyncIterable(iterator)).to.be.true;
+    expect(isAsyncIterableIterator(iterator)).to.be.true;
   });
 
   it('should trigger event on asyncIterator when published', done => {
     const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(eventName);
+    const iterator = ps.asyncIterableIterator(eventName);
 
     iterator.next().then(result => {
       expect(result).to.not.be.undefined;
@@ -60,7 +63,7 @@ describe('AsyncIterator', () => {
   it('should not trigger event on asyncIterator when publishing other event', () => {
     const eventName = 'test2';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator('test');
+    const iterator = ps.asyncIterableIterator('test');
     const spy = sinon.spy();
 
     iterator.next().then(spy);
@@ -71,7 +74,7 @@ describe('AsyncIterator', () => {
   it('register to multiple events', done => {
     const eventName = 'test2';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(['test', 'test2']);
+    const iterator = ps.asyncIterableIterator(['test', 'test2'] as const);
     const spy = sinon.spy();
 
     iterator.next().then(() => {
@@ -85,7 +88,7 @@ describe('AsyncIterator', () => {
   it('should not trigger event on asyncIterator already returned', done => {
     const eventName = 'test';
     const ps = new PubSub();
-    const iterator = ps.asyncIterator(eventName);
+    const iterator = ps.asyncIterableIterator(eventName);
 
     iterator.next().then(result => {
       expect(result).to.deep.equal({
@@ -117,7 +120,7 @@ describe('AsyncIterator', () => {
       }
     }
     const ps = new TestPubSub();
-    ps.asyncIterator(testEventName);
+    ps.asyncIterableIterator(testEventName);
 
     expect(ps.listenerCount(testEventName)).to.equal(0);
   });
