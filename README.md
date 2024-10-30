@@ -165,6 +165,8 @@ export const resolvers = {
 }
 ````
 
+Note that `resolve` methods execute *after* `subscribe`, so if the code in `subscribe` depends on a manipulated payload field, you will need to factor out the manipulation and call it from both `subscribe` and `resolve`.
+
 ### Usage with callback listeners
 
 Your database might have callback-based listeners for changes, for example something like this:
@@ -202,7 +204,7 @@ The value you should return from your `subscribe` resolver must be an `AsyncIter
 
 You can use this value and wrap it with another `AsyncIterator` to implement custom logic over your subscriptions.
 
-For example, the following implementation manipulate the payload by adding some static fields:
+For example, the following implementation manipulates the payload by adding some static fields:
 
 ```typescript
 import { $$asyncIterator } from 'iterall';
@@ -259,6 +261,7 @@ It can be easily replaced with some other implementations of [PubSubEngine abstr
 - Use multiple backends with https://github.com/jcoreio/graphql-multiplex-subscriptions
 - Use Ably for multi-protocol support with https://github.com/ably-labs/graphql-ably-pubsub
 - Use Google Firestore with https://github.com/m19c/graphql-firestore-subscriptions
+- Use Amazon's Simple Notification Service (SNS) and Simple Queue Service (SQS) with https://github.com/sagahead-io/graphql-snssqs-subscriptions
 - [Add your implementation...](https://github.com/apollographql/graphql-subscriptions/pull/new/master)
 
 You can also implement a `PubSub` of your own, by using the exported abstract class `PubSubEngine` from this package. By using `extends PubSubEngine` you use the default `asyncIterator` method implementation; by using `implements PubSubEngine` you must implement your own `AsyncIterator`.
