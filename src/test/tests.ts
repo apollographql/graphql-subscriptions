@@ -15,7 +15,7 @@ const isAsyncIterableIterator = (input: unknown): input is AsyncIterableIterator
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
-const assert = chai.assert;
+const assert: Chai.AssertStatic = chai.assert;
 
 describe('PubSub', function() {
   it('can subscribe and is called when events happen', () => {

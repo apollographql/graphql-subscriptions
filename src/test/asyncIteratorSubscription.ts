@@ -211,20 +211,23 @@ describe('withFilter', () => {
     let stopped = false;
 
     let index = 0;
-    const asyncIterator: AsyncIterator<any> = {
+    const asyncIterator: AsyncIterableIterator<any> = {
       next() {
         if (stopped) {
-          return Promise.resolve({done: true, value: undefined});
+          return Promise.resolve({ done: true, value: undefined });
         }
         index += 1;
         return new Promise(resolve => setImmediate(resolve))
-          .then(() => ({done: false, value: index}));
+          .then(() => ({ done: false, value: index }));
       },
       return() {
         return Promise.resolve({ value: undefined, done: true });
       },
       throw(error) {
         return Promise.reject(error);
+      },
+      [Symbol.asyncIterator]: function (): AsyncIterableIterator<any> {
+        throw new Error('Function not implemented.');
       },
     };
 

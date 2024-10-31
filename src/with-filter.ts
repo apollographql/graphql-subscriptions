@@ -1,5 +1,5 @@
 export type FilterFn<TSource = any, TArgs = any, TContext = any> = (rootValue?: TSource, args?: TArgs, context?: TContext, info?: any) => boolean | Promise<boolean>;
-export type ResolverFn<TSource = any, TArgs = any, TContext = any> = (rootValue?: TSource, args?: TArgs, context?: TContext, info?: any) => AsyncIterator<any> | Promise<AsyncIterator<any>>;
+export type ResolverFn<TSource = any, TArgs = any, TContext = any> = (rootValue?: TSource, args?: TArgs, context?: TContext, info?: any) => AsyncIterableIterator<any> | Promise<AsyncIterableIterator<any>>;
 
 interface IterallAsyncIterator<T> extends AsyncIterableIterator<T> {
   [Symbol.asyncIterator](): IterallAsyncIterator<T>;
