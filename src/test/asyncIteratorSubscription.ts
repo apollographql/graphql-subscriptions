@@ -5,10 +5,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { spy } from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import { createAsyncIterator, isAsyncIterable } from 'iterall';
 import { PubSub } from '../pubsub';
 import { withFilter, FilterFn } from '../with-filter';
 import { ExecutionResult } from 'graphql';
+
+const isAsyncIterableIterator = (input: unknown): input is AsyncIterableIterator<unknown>  => {
+  return input != null && typeof input[Symbol.asyncIterator] === 'function';
+};
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -64,14 +67,13 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterableIterator(FIRST_EVENT);
     const schema = buildSchema(origIterator);
 
-
-    const results = await subscribe({schema, document: query}) as AsyncIterator<ExecutionResult>;
+    const results = await subscribe({ schema, document: query }) as AsyncIterableIterator<ExecutionResult>;
     const payload1 = results.next();
 
-    expect(isAsyncIterable(results)).to.be.true;
+    expect(isAsyncIterableIterator(results)).to.be.true;
 
     const r = payload1.then(res => {
       expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
@@ -90,13 +92,13 @@ describe('GraphQL-JS asyncIterator', () => {
       }
     `);
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterableIterator(FIRST_EVENT);
     const schema = buildSchema(origIterator, () => Promise.resolve(true));
 
-    const results = await subscribe({schema, document: query}) as AsyncIterator<ExecutionResult>;
+    const results = await subscribe({ schema, document: query }) as AsyncIterableIterator<ExecutionResult>;
     const payload1 = results.next();
 
-    expect(isAsyncIterable(results)).to.be.true;
+    expect(isAsyncIterableIterator(results)).to.be.true;
 
     const r = payload1.then(res => {
       expect(res.value.data.testSubscription).to.equal('FIRST_EVENT');
@@ -115,7 +117,7 @@ describe('GraphQL-JS asyncIterator', () => {
     `);
 
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterableIterator(FIRST_EVENT);
 
     let counter = 0;
 
@@ -133,8 +135,8 @@ describe('GraphQL-JS asyncIterator', () => {
 
     const schema = buildSchema(origIterator, filterFn);
 
-    subscribe({schema, document: query}).then((results: AsyncGenerator<ExecutionResult, void, void> | ExecutionResult) => {
-      expect(isAsyncIterable(results)).to.be.true;
+    Promise.resolve(subscribe({ schema, document: query })).then((results: AsyncIterableIterator<ExecutionResult> | ExecutionResult) => {
+      expect(isAsyncIterableIterator(results)).to.be.true;
 
       (results as AsyncGenerator<ExecutionResult, void, void>).next();
       (results as AsyncGenerator<ExecutionResult, void, void>).return();
@@ -155,7 +157,7 @@ describe('GraphQL-JS asyncIterator', () => {
     `);
 
     const pubsub = new PubSub();
-    const origIterator = pubsub.asyncIterator(FIRST_EVENT);
+    const origIterator = pubsub.asyncIterableIterator(FIRST_EVENT);
     const returnSpy = spy(origIterator, 'return');
     const schema = buildSchema(origIterator);
 
@@ -172,21 +174,22 @@ describe('GraphQL-JS asyncIterator', () => {
   });
 });
 
+function isEven(x: number) {
+  if (x === undefined) {
+    throw Error('Undefined value passed to filterFn');
+  }
+  return x % 2 === 0;
+}
+
+const testFiniteAsyncIterator: AsyncIterableIterator<number> = (async function * () {
+  for  (const value of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    yield value;
+  }
+})();
+
 describe('withFilter', () => {
-
   it('works properly with finite asyncIterators', async () => {
-    const isEven = (x: number) => x % 2 === 0;
-
-    const testFiniteAsyncIterator: AsyncIterator<number> = createAsyncIterator([1, 2, 3, 4, 5, 6, 7, 8]);
-    // Work around https://github.com/leebyron/iterall/issues/48
-    testFiniteAsyncIterator.throw = function (error) {
-      return Promise.reject(error);
-    };
-    testFiniteAsyncIterator.return = function () {
-      return Promise.resolve({ value: undefined, done: true });
-    };
-
-    const filteredAsyncIterator = withFilter(() => testFiniteAsyncIterator, isEven)();
+    const filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)();
 
     for (let i = 1; i <= 4; i++) {
       const result = await filteredAsyncIterator.next();
@@ -225,7 +228,8 @@ describe('withFilter', () => {
       },
     };
 
-    const filteredAsyncIterator = withFilter(() => asyncIterator, () => stopped)();
+    const filteredAsyncIterator =
+      await withFilter(() => asyncIterator, () => stopped)();
 
     global.gc();
     const heapUsed = process.memoryUsage().heapUsed;

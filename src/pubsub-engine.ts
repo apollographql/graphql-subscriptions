@@ -1,10 +1,10 @@
-import {PubSubAsyncIterator} from './pubsub-async-iterator';
+import {PubSubAsyncIterableIterator} from './pubsub-async-iterable-iterator';
 
 export abstract class PubSubEngine {
   public abstract publish(triggerName: string, payload: any): Promise<void>;
   public abstract subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>;
   public abstract unsubscribe(subId: number);
-  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers);
+  public asyncIterableIterator<T>(triggers: string | readonly string[]): PubSubAsyncIterableIterator<T> {
+    return new PubSubAsyncIterableIterator<T>(this, triggers);
   }
 }
