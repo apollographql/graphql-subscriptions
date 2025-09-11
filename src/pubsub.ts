@@ -7,7 +7,7 @@ export interface PubSubOptions {
 
 export class PubSub<
   Events extends { [event: string]: unknown } = Record<string, never>
-> extends PubSubEngine {
+> extends PubSubEngine<Events> {
   protected ee: EventEmitter;
   private subscriptions: { [key: string]: [string, (...args: any[]) => void] };
   private subIdCounter: number;

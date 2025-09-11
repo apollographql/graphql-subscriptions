@@ -1,10 +1,12 @@
 import {PubSubAsyncIterableIterator} from './pubsub-async-iterable-iterator';
 
-export abstract class PubSubEngine {
-  public abstract publish(triggerName: string, payload: any): Promise<void>;
-  public abstract subscribe(triggerName: string, onMessage: Function, options: Object): Promise<number>;
-  public abstract unsubscribe(subId: number);
-  public asyncIterableIterator<T>(triggers: string | readonly string[]): PubSubAsyncIterableIterator<T> {
-    return new PubSubAsyncIterableIterator<T>(this, triggers);
+export abstract class PubSubEngine<
+  Events extends { [event: string]: unknown } = Record<string, never>
+> {
+  public abstract publish<K extends keyof Events>(triggerName: K, payload: Events[K]): Promise<void>;
+  public abstract subscribe<K extends keyof Events>(triggerName: K, onMessage: (payload: Events[K]) => void, options: Object): Promise<number>;
+  public abstract unsubscribe(subId: number): void;
+  public asyncIterableIterator<K extends keyof Events>(triggers: K | readonly K[]): PubSubAsyncIterableIterator<Events[K]> {
+    return new PubSubAsyncIterableIterator<Events[K]>(this as any, triggers as any);
   }
 }
