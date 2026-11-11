@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node-version }}, graphql ${{ matrix.graphql-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['22', '24']
+        graphql-version: ['16', '17']
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      # package.json's devDependency is graphql v16; swap in other supported
+      # majors so the test suite runs against each of them.
+      - name: Use graphql ${{ matrix.graphql-version }}
+        if: matrix.graphql-version != '16'
+        run: npm install --no-save graphql@${{ matrix.graphql-version }}
+
+      - name: Test
+        run: npm test

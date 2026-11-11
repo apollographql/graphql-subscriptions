@@ -1,5 +1,10 @@
 # Changelog
 
+### vNEXT
+
+- Support `graphql@17`. <br/>
+  [@glasser](https://github.com/glasser) in [#286](https://github.com/apollographql/graphql-subscriptions/pull/286)
+
 ### 3.0.0
 
 - **[BREAKING]** Replace `iterall` use with native `Symbol.asyncIterator`. `PubSubEngine.asyncIterator` is now `PubSubEngine.asyncIterableIterator`. <br/>
