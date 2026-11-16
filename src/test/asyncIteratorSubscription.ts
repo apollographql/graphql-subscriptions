@@ -188,6 +188,20 @@ const testFiniteAsyncIterator: AsyncIterableIterator<number> = (async function *
 })();
 
 describe('withFilter', () => {
+  it('types the filter payload from the iterator value', () => {
+    // Type-level checks only: this test fails at the `tsc` step if they regress
+    const pubsub = new PubSub();
+    withFilter(
+      () => pubsub.asyncIterableIterator<{ id: string }>('TRIGGER'),
+      (payload) => payload.id === '1',
+    );
+    withFilter(
+      () => pubsub.asyncIterableIterator<{ id: string }>('TRIGGER'),
+      // @ts-expect-error filter payload is typed from the iterator value
+      (payload) => payload.missing === '1',
+    );
+  });
+
   it('works properly with finite asyncIterators', async () => {
     const filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)(undefined, undefined, undefined);
 
