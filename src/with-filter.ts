@@ -11,10 +11,10 @@ export type WithFilter<TSource = any, TArgs = any, TContext = any, TResolve = an
   filterFn: FilterFn<TResolve, TArgs, TContext>
 ) => IterableResolverFn<TSource, TArgs, TContext>;
 
-  export function withFilter<TSource = any, TArgs = any, TContext = any, TResolve = any>(
-    asyncIteratorFn: ResolverFn<TSource, TArgs, TContext, TResolve>,
-    filterFn: FilterFn<TResolve, TArgs, TContext>
-  ): IterableResolverFn<TSource, TArgs, TContext> {
+export function withFilter<TSource = any, TArgs = any, TContext = any, TResolve = any>(
+  asyncIteratorFn: ResolverFn<TSource, TArgs, TContext, TResolve>,
+  filterFn: FilterFn<TResolve, TArgs, TContext>
+): IterableResolverFn<TSource, TArgs, TContext> {
   return async (rootValue: TSource, args: TArgs, context: TContext, info: any): Promise<IterallAsyncIterator<any>> => {
     const asyncIterator = await asyncIteratorFn(rootValue, args, context, info);
 
