@@ -1,6 +1,6 @@
 export type FilterFn<TSource = any, TArgs = any, TContext = any> = (rootValue: TSource, args: TArgs, context: TContext, info?: any) => boolean | Promise<boolean>;
 export type ResolverFn<TSource = any, TArgs = any, TContext = any, TResolve = any> = (rootValue: TSource, args: TArgs, context: TContext, info?: any) => AsyncIterator<TResolve> | Promise<AsyncIterator<TResolve>>;
-export type IterableResolverFn<TSource = any, TArgs = any, TContext = any> = (rootValue: TSource, args: TArgs, context: TContext, info?: any) => AsyncIterableIterator<any> | Promise<AsyncIterableIterator<any>>;
+export type IterableResolverFn<TSource = any, TArgs = any, TContext = any, TResolve = any> = (rootValue: TSource, args: TArgs, context: TContext, info?: any) => AsyncIterableIterator<TResolve> | Promise<AsyncIterableIterator<TResolve>>;
 
 interface IterallAsyncIterator<T> extends AsyncIterableIterator<T> {
   [Symbol.asyncIterator](): IterallAsyncIterator<T>;
@@ -9,13 +9,13 @@ interface IterallAsyncIterator<T> extends AsyncIterableIterator<T> {
 export type WithFilter<TSource = any, TArgs = any, TContext = any, TResolve = any> = (
   asyncIteratorFn: ResolverFn<TSource, TArgs, TContext, TResolve>,
   filterFn: FilterFn<TResolve, TArgs, TContext>
-) => IterableResolverFn<TSource, TArgs, TContext>;
+) => IterableResolverFn<TSource, TArgs, TContext, TResolve>;
 
 export function withFilter<TSource = any, TArgs = any, TContext = any, TResolve = any>(
   asyncIteratorFn: ResolverFn<TSource, TArgs, TContext, TResolve>,
   filterFn: FilterFn<TResolve, TArgs, TContext>
-): IterableResolverFn<TSource, TArgs, TContext> {
-  return async (rootValue: TSource, args: TArgs, context: TContext, info: any): Promise<IterallAsyncIterator<any>> => {
+): IterableResolverFn<TSource, TArgs, TContext, TResolve> {
+  return async (rootValue: TSource, args: TArgs, context: TContext, info: any): Promise<IterallAsyncIterator<TResolve>> => {
     const asyncIterator = await asyncIteratorFn(rootValue, args, context, info);
 
     const getNextPromise = () => {
