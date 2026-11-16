@@ -189,7 +189,7 @@ const testFiniteAsyncIterator: AsyncIterableIterator<number> = (async function *
 
 describe('withFilter', () => {
   it('works properly with finite asyncIterators', async () => {
-    const filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)();
+    const filteredAsyncIterator = await withFilter(() => testFiniteAsyncIterator, isEven)(undefined, undefined, undefined);
 
     for (let i = 1; i <= 4; i++) {
       const result = await filteredAsyncIterator.next();
@@ -229,7 +229,7 @@ describe('withFilter', () => {
     };
 
     const filteredAsyncIterator =
-      await withFilter(() => asyncIterator, () => stopped)();
+      await withFilter(() => asyncIterator, () => stopped)(undefined, undefined, undefined);
 
     global.gc();
     const heapUsed = process.memoryUsage().heapUsed;
