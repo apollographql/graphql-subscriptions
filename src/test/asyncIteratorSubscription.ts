@@ -19,12 +19,11 @@ const expect = chai.expect;
 
 import {
   parse,
+  subscribe,
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
-
-import { subscribe } from 'graphql/subscription';
 
 const FIRST_EVENT = 'FIRST_EVENT';
 

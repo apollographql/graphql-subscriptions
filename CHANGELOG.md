@@ -4,8 +4,13 @@
 
 - Fix `withFilter` types: the filter function's first parameter is now typed from the value yielded by the resolver's iterator (new `TResolve` generic) instead of the resolver's root value, and that payload type is carried through to the returned iterator. <br/>
   [@sevrai](https://github.com/sevrai) in [#282](https://github.com/apollographql/graphql-subscriptions/pull/282)
-  - **[BREAKING]** (types only) The resolver returned by `withFilter` now requires `rootValue`, `args` and `context`. Code calling it directly without arguments (mostly unit tests) must pass them explicitly, e.g. `withFilter(...)(undefined, undefined, undefined)`.
+  - The resolver returned by `withFilter` now requires `rootValue`, `args` and `context`. Code calling it directly without arguments (mostly unit tests) must pass them explicitly, e.g. `withFilter(...)(undefined, undefined, undefined)`.
   - Callers that pass three explicit generics (`withFilter<Root, Args, Ctx>`, the usual graphql-codegen pattern) get `any` for the filter payload unless they add the fourth one: `withFilter<Root, Args, Ctx, Payload>`.
+
+### 3.1.0
+
+- Support `graphql@17`. <br/>
+  [@glasser](https://github.com/glasser) in [#286](https://github.com/apollographql/graphql-subscriptions/pull/286)
 
 ### 3.0.0
 
