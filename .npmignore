@@ -8,3 +8,9 @@ dist/test
 yarn.lock
 coverage
 .vscode
+.github
+.circleci
+.designs
+.travis.yml
+CODEOWNERS
+CONTRIBUTING.md
